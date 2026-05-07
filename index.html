@@ -697,7 +697,7 @@ function toast(msg,type=''){
   clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2200);
 }
 
-if('serviceWorker'in navigator)navigator.serviceWorker.register('/attendance/sw.js').catch(()=>{});
+if('serviceWorker'in navigator)navigator.serviceWorker.register('/checkAttendance/sw.js').catch(()=>{});
 init();
 </script>
 </body>
