@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#185FA5">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="출석체크">
+<title>출석체크</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css">
+<style>
+:root {
+  --blue:#185FA5; --blue-bg:#E6F1FB;
+  --present-bg:#E1F5EE; --present-bd:#1D9E75; --present-tx:#085041; --present-badge:#0F6E56;
+  --absent-bg:#FCEBEB;  --absent-bd:#E24B4A;  --absent-tx:#501313;  --absent-badge:#A32D2D;
+  --late-bg:#FAEEDA;    --late-bd:#EF9F27;    --late-tx:#412402;    --late-badge:#854F0B;
+  --surf:#fff; --surf2:#F8F7F4;
+  --bd:rgba(0,0,0,.10); --bd2:rgba(0,0,0,.18);
+  --tx:#1a1a18; --tx2:#5F5E5A; --tx3:#888780;
+  --r:10px; --rlg:14px;
+  --shlg:0 8px 32px rgba(0,0,0,.16);
+}
+@media(prefers-color-scheme:dark){:root{
+  --surf:#1c1c1a; --surf2:#252523;
+  --bd:rgba(255,255,255,.10); --bd2:rgba(255,255,255,.18);
+  --tx:#f0eeea; --tx2:#B4B2A9; --tx3:#888780;
+  --blue-bg:#0C447C;
+  --present-bg:#04342C; --present-bd:#0F6E56; --present-tx:#9FE1CB;
+  --absent-bg:#501313;  --absent-bd:#A32D2D;  --absent-tx:#F7C1C1;
+  --late-bg:#412402;    --late-bd:#854F0B;    --late-tx:#FAC775;
+}}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;background:var(--surf2);color:var(--tx)}
+
+/* HEADER */
+.hdr{position:sticky;top:0;z-index:50;background:var(--surf);border-bottom:.5px solid var(--bd);padding:0 16px;padding-top:env(safe-area-inset-top)}
+.hdr-top{display:flex;align-items:center;justify-content:space-between;height:52px}
+.hdr-title{font-size:17px;font-weight:700}
+.hdr-date{font-size:12px;color:var(--tx2);margin-top:1px}
+.icon-btn{width:36px;height:36px;border-radius:8px;border:.5px solid var(--bd2);background:var(--surf2);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--tx);font-size:18px}
+
+/* SESSION TABS */
+.session-tabs{display:flex}
+.session-tab{flex:1;padding:10px 0;font-size:13px;font-weight:600;text-align:center;border:none;background:transparent;color:var(--tx3);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s}
+.session-tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+
+/* CLASS TABS */
+.class-tabs-wrap{display:flex;align-items:center;gap:6px;padding:8px 0 10px;overflow-x:auto;scrollbar-width:none}
+.class-tabs-wrap::-webkit-scrollbar{display:none}
+.class-tab{flex-shrink:0;padding:5px 14px;border-radius:20px;font-size:13px;font-weight:500;border:.5px solid var(--bd2);background:var(--surf2);color:var(--tx2);cursor:pointer;white-space:nowrap}
+.class-tab.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+.add-tab-btn{flex-shrink:0;width:28px;height:28px;border-radius:50%;border:1px dashed var(--bd2);background:transparent;color:var(--tx3);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px}
+
+/* STATS */
+.stats-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:10px 16px;background:var(--surf);border-bottom:.5px solid var(--bd)}
+.stat-item{text-align:center}
+.stat-num{font-size:22px;font-weight:700;line-height:1}
+.stat-label{font-size:11px;color:var(--tx3);margin-top:2px}
+.s-total .stat-num{color:var(--tx)}
+.s-present .stat-num{color:var(--present-badge)}
+.s-absent .stat-num{color:var(--absent-badge)}
+.s-late .stat-num{color:var(--late-badge)}
+
+/* ACTION BAR */
+.action-bar{background:var(--surf);border-bottom:.5px solid var(--bd);padding:10px 16px;display:flex;flex-direction:column;gap:8px}
+.all-present-btn{width:100%;padding:11px;border-radius:10px;border:none;background:var(--present-badge);color:#fff;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:opacity .12s}
+.all-present-btn:active{opacity:.85}
+.mode-row{display:flex;align-items:center;gap:8px}
+.mode-label{font-size:12px;color:var(--tx3);white-space:nowrap;flex-shrink:0}
+.mode-btns{display:flex;gap:6px;flex:1}
+.mode-btn{flex:1;padding:8px 4px;border-radius:8px;border:2px solid var(--bd);background:var(--surf2);color:var(--tx2);font-size:13px;font-weight:600;cursor:pointer;text-align:center;white-space:nowrap;transition:all .12s}
+.mode-btn.mode-present.active{background:var(--present-bg);border-color:var(--present-bd);color:var(--present-tx)}
+.mode-btn.mode-absent.active{background:var(--absent-bg);border-color:var(--absent-bd);color:var(--absent-tx)}
+.mode-btn.mode-late.active{background:var(--late-bg);border-color:var(--late-bd);color:var(--late-tx)}
+.mode-div{width:1px;height:26px;background:var(--bd2);flex-shrink:0}
+.reset-btn{font-size:11px;padding:5px 9px;border-radius:6px;border:.5px solid var(--bd2);background:var(--surf2);color:var(--tx2);cursor:pointer;white-space:nowrap;flex-shrink:0}
+/* 메모 힌트 */
+.memo-hint{font-size:10px;color:var(--tx3);text-align:right;padding:0 2px 2px}
+
+/* STUDENT GRID */
+.student-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;padding:12px 16px 100px}
+@media(min-width:600px){.student-grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr))}}
+
+.student-card{background:var(--surf);border:.5px solid var(--bd);border-radius:var(--r);padding:10px 8px 8px;text-align:center;cursor:pointer;transition:transform .1s;user-select:none;position:relative}
+.student-card:active{transform:scale(.96)}
+.student-card.present{background:var(--present-bg);border-color:var(--present-bd)}
+.student-card.absent{background:var(--absent-bg);border-color:var(--absent-bd)}
+.student-card.late{background:var(--late-bg);border-color:var(--late-bd)}
+
+.card-num{font-size:10px;color:var(--tx3);margin-bottom:2px}
+.card-name{font-size:14px;font-weight:600;color:var(--tx);line-height:1.2}
+.student-card.present .card-name{color:var(--present-tx)}
+.student-card.absent .card-name{color:var(--absent-tx)}
+.student-card.late .card-name{color:var(--late-tx)}
+
+.card-badge{display:inline-block;margin-top:5px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;background:var(--bd);color:var(--tx3)}
+.student-card.present .card-badge{background:var(--present-badge);color:#fff}
+.student-card.absent .card-badge{background:var(--absent-badge);color:#fff}
+.student-card.late .card-badge{background:var(--late-badge);color:#fff}
+
+/* 사유 메모 표시 */
+.card-memo{font-size:10px;color:var(--tx3);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;padding:0 2px}
+.student-card.absent .card-memo{color:var(--absent-tx);opacity:.8}
+.student-card.late .card-memo{color:var(--late-tx);opacity:.8}
+/* 메모 있을 때 연필 아이콘 */
+.card-memo-icon{position:absolute;top:6px;right:6px;font-size:10px;color:var(--tx3);opacity:.5}
+.student-card.absent .card-memo-icon,.student-card.late .card-memo-icon{color:var(--tx3);opacity:.6}
+
+/* BOTTOM BAR */
+.bottom-bar{position:fixed;bottom:0;left:0;right:0;background:var(--surf);border-top:.5px solid var(--bd);padding:10px 16px;padding-bottom:calc(10px + env(safe-area-inset-bottom));display:flex;gap:8px;align-items:center;z-index:40}
+.url-input{flex:1;height:40px;border-radius:8px;border:.5px solid var(--bd2);background:var(--surf2);color:var(--tx);font-size:12px;padding:0 10px;min-width:0;font-family:inherit}
+.btn-save{height:40px;padding:0 18px;border-radius:8px;border:none;background:var(--blue);color:#fff;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:5px;flex-shrink:0}
+.btn-save:disabled{background:#ccc;color:#888}
+
+/* MEMO MODAL (결석/지각 사유) */
+.memo-overlay{display:none;position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.45);align-items:flex-end;justify-content:center}
+.memo-overlay.show{display:flex}
+.memo-sheet{background:var(--surf);border-radius:20px 20px 0 0;padding:0;width:100%;max-width:480px;box-shadow:var(--shlg);animation:slideUp .2s ease;padding-bottom:env(safe-area-inset-bottom)}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.memo-handle{width:36px;height:4px;background:var(--bd2);border-radius:2px;margin:10px auto 0}
+.memo-student{text-align:center;padding:14px 16px 0}
+.memo-student-name{font-size:17px;font-weight:700}
+.memo-student-status{display:inline-block;margin-top:4px;font-size:12px;font-weight:600;padding:3px 10px;border-radius:20px}
+.memo-student-status.absent{background:var(--absent-badge);color:#fff}
+.memo-student-status.late{background:var(--late-badge);color:#fff}
+.memo-body{padding:14px 16px 0}
+.memo-label{font-size:12px;color:var(--tx3);margin-bottom:6px;font-weight:600}
+.memo-presets{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.memo-preset{padding:6px 12px;border-radius:20px;border:.5px solid var(--bd2);background:var(--surf2);color:var(--tx2);font-size:13px;cursor:pointer}
+.memo-preset:active{background:var(--bd)}
+.memo-textarea{width:100%;padding:10px 12px;border-radius:10px;border:.5px solid var(--bd2);background:var(--surf2);color:var(--tx);font-size:14px;font-family:inherit;resize:none;height:72px}
+.memo-footer{display:flex;gap:8px;padding:12px 16px 14px}
+.memo-clear{flex:1;padding:12px;border-radius:10px;border:.5px solid var(--bd2);background:var(--surf2);color:var(--tx2);font-size:14px;font-weight:600;cursor:pointer}
+.memo-save{flex:2;padding:12px;border-radius:10px;border:none;background:var(--blue);color:#fff;font-size:14px;font-weight:600;cursor:pointer}
+
+/* MODAL (공통) */
+.modal-overlay{display:none;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.45);align-items:center;justify-content:center;padding:20px}
+.modal-overlay.show{display:flex}
+.modal-box{background:var(--surf);border-radius:var(--rlg);padding:20px;width:100%;max-width:360px;box-shadow:var(--shlg)}
+.modal-title{font-size:16px;font-weight:700;margin-bottom:14px}
+.modal-sub{font-size:12px;color:var(--tx3);margin-bottom:5px}
+.modal-input,.modal-textarea{width:100%;padding:10px 12px;border-radius:8px;border:.5px solid var(--bd2);background:var(--surf2);color:var(--tx);font-size:14px;font-family:inherit;margin-bottom:10px}
+.modal-textarea{height:130px;resize:vertical}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:6px}
+.btn-cancel{padding:9px 16px;border-radius:8px;border:.5px solid var(--bd2);background:var(--surf2);color:var(--tx2);font-size:14px;cursor:pointer}
+.btn-confirm{padding:9px 18px;border-radius:8px;border:none;background:var(--blue);color:#fff;font-size:14px;font-weight:600;cursor:pointer}
+
+/* STUDENT MANAGE */
+.sm-list{display:flex;flex-direction:column;gap:4px;max-height:220px;overflow-y:auto;margin-bottom:10px}
+.sm-row{display:flex;align-items:center;gap:8px;padding:7px 8px;background:var(--surf2);border-radius:6px;border:.5px solid var(--bd)}
+.sm-num{font-size:11px;color:var(--tx3);width:20px;text-align:right;flex-shrink:0}
+.sm-name{flex:1;font-size:14px}
+.sm-del{width:26px;height:26px;border-radius:6px;border:none;background:var(--absent-bg);color:var(--absent-badge);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.add-row{display:flex;gap:6px}
+.add-input{flex:1;padding:8px 10px;border-radius:8px;border:.5px solid var(--bd2);background:var(--surf2);color:var(--tx);font-size:14px;font-family:inherit}
+.add-btn{padding:8px 14px;border-radius:8px;border:none;background:var(--blue);color:#fff;font-size:13px;font-weight:600;cursor:pointer}
+
+/* SETTINGS */
+.settings-overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.35)}
+.settings-overlay.show{display:block}
+.settings-panel{position:fixed;top:0;right:0;bottom:0;width:min(320px,90vw);background:var(--surf);box-shadow:var(--shlg);overflow-y:auto;animation:slideR .2s ease}
+@keyframes slideR{from{transform:translateX(100%)}to{transform:translateX(0)}}
+.sp-hdr{display:flex;align-items:center;justify-content:space-between;padding:16px;padding-top:calc(16px + env(safe-area-inset-top));border-bottom:.5px solid var(--bd)}
+.sp-title{font-size:16px;font-weight:700}
+.sp-sec{padding:14px 16px;border-bottom:.5px solid var(--bd)}
+.sp-label{font-size:11px;color:var(--tx3);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.sbadge{font-size:10px;padding:2px 7px;border-radius:4px;font-weight:600}
+.sbadge-m{background:#FFF3CD;color:#856404}
+.sbadge-c{background:#D1ECF1;color:#0C5460}
+.sp-url{width:100%;padding:10px 12px;border-radius:8px;border:.5px solid var(--bd2);background:var(--surf2);color:var(--tx);font-size:13px;font-family:inherit;margin-bottom:8px}
+.cm-list{display:flex;flex-direction:column;gap:6px}
+.cm-item{display:flex;align-items:center;padding:8px 10px;border-radius:8px;background:var(--surf2);border:.5px solid var(--bd);gap:8px}
+.cm-info{flex:1}
+.cm-name{font-size:14px;font-weight:600}
+.cm-meta{font-size:11px;color:var(--tx3);margin-top:1px}
+.cm-btns{display:flex;gap:5px}
+.cm-edit{width:28px;height:28px;border-radius:6px;border:none;background:var(--blue-bg);color:var(--blue);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px}
+.cm-del{width:28px;height:28px;border-radius:6px;border:none;background:var(--absent-bg);color:var(--absent-badge);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px}
+.sp-add-btn{width:100%;padding:10px;border-radius:8px;border:1px dashed var(--bd2);background:transparent;color:var(--tx2);font-size:14px;cursor:pointer;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:6px}
+
+/* TOAST */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);opacity:0;background:#1a1a18;color:#f0eeea;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:500;pointer-events:none;z-index:999;transition:all .2s;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.ok{background:var(--present-badge)}
+.toast.err{background:var(--absent-badge)}
+.empty-state{grid-column:1/-1;text-align:center;padding:40px 0;color:var(--tx3);font-size:14px;line-height:2}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hdr-top">
+    <div>
+      <div class="hdr-title">출석체크</div>
+      <div class="hdr-date" id="headerDate"></div>
+    </div>
+    <button class="icon-btn" onclick="openSettings()"><i class="ti ti-settings"></i></button>
+  </div>
+  <div class="session-tabs">
+    <button class="session-tab active" id="tab-morning" onclick="switchSession('morning')">🌅 아침자습 (7:50)</button>
+    <button class="session-tab" id="tab-class" onclick="switchSession('class')">📚 수업 (8:30~)</button>
+  </div>
+  <div class="class-tabs-wrap" id="classTabs"></div>
+</div>
+
+<!-- STATS -->
+<div class="stats-bar">
+  <div class="stat-item s-total"><div class="stat-num" id="statTotal">0</div><div class="stat-label">전체</div></div>
+  <div class="stat-item s-present"><div class="stat-num" id="statPresent">0</div><div class="stat-label">출석</div></div>
+  <div class="stat-item s-absent"><div class="stat-num" id="statAbsent">0</div><div class="stat-label">결석</div></div>
+  <div class="stat-item s-late"><div class="stat-num" id="statLate">0</div><div class="stat-label">지각</div></div>
+</div>
+
+<!-- ACTION BAR -->
+<div class="action-bar">
+  <button class="all-present-btn" onclick="allPresent()">
+    <i class="ti ti-checks" style="font-size:18px"></i> 전체 출석
+  </button>
+  <div class="mode-row">
+    <div class="mode-label">입력 모드</div>
+    <div class="mode-btns">
+      <button class="mode-btn mode-present active" id="modePresent" onclick="setMode('present')">✅ 출석</button>
+      <button class="mode-btn mode-absent" id="modeAbsent" onclick="setMode('absent')">❌ 결석</button>
+      <button class="mode-btn mode-late" id="modeLate" onclick="setMode('late')">⏰ 지각</button>
+    </div>
+    <div class="mode-div"></div>
+    <button class="reset-btn" onclick="resetAll()">초기화</button>
+  </div>
+  <div class="memo-hint">✏️ 사유: 모바일 길게 누르기 · PC 우클릭</div>
+</div>
+
+<!-- STUDENT GRID -->
+<div class="student-grid" id="studentGrid"></div>
+
+<!-- BOTTOM BAR -->
+<div class="bottom-bar">
+  <input class="url-input" id="urlInput" type="url" placeholder="Apps Script URL" />
+  <div id="syncDot" title="동기화 대기" style="width:8px;height:8px;border-radius:50%;background:var(--tx3);flex-shrink:0;transition:background .3s"></div>
+  <button class="btn-save" id="saveBtn" onclick="saveAttendance()">
+    <i class="ti ti-device-floppy" style="font-size:15px"></i> 시트 저장
+  </button>
+</div>
+
+<!-- 사유 메모 시트 (결석/지각 탭 시) -->
+<div class="memo-overlay" id="memoOverlay" onclick="if(event.target===this)closeMemo()">
+  <div class="memo-sheet">
+    <div class="memo-handle"></div>
+    <div class="memo-student">
+      <div class="memo-student-name" id="memoName"></div>
+      <span class="memo-student-status" id="memoStatus"></span>
+    </div>
+    <div class="memo-body">
+      <div class="memo-label">사유 선택 (빠른 입력)</div>
+      <div class="memo-presets" id="memoPresets"></div>
+      <div class="memo-label">직접 입력</div>
+      <textarea class="memo-textarea" id="memoText" placeholder="사유를 직접 입력하세요"></textarea>
+    </div>
+    <div class="memo-footer">
+      <button class="memo-clear" onclick="clearMemo()">사유 없음</button>
+      <button class="memo-save" onclick="saveMemo()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 반 추가 모달 -->
+<div class="modal-overlay" id="addClassModal" onclick="if(event.target===this)closeAddModal()">
+  <div class="modal-box">
+    <div class="modal-title" id="addClassTitle">반 추가</div>
+    <div class="modal-sub">반 이름</div>
+    <input class="modal-input" id="newClassName" placeholder="예: 과탐실1반, 3-6화학" />
+    <div class="modal-sub">학생 이름 (줄바꿈 구분, 나중에도 추가 가능)</div>
+    <textarea class="modal-textarea" id="newStudentList" placeholder="홍길동&#10;김철수&#10;이영희"></textarea>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeAddModal()">취소</button>
+      <button class="btn-confirm" onclick="confirmAddClass()">추가</button>
+    </div>
+  </div>
+</div>
+
+<!-- 학생 편집 모달 -->
+<div class="modal-overlay" id="editModal" onclick="if(event.target===this)closeEditModal()">
+  <div class="modal-box">
+    <div class="modal-title" id="editModalTitle">학생 편집</div>
+    <div class="sm-list" id="smList"></div>
+    <div class="add-row">
+      <input class="add-input" id="addStudentName" placeholder="이름 입력" onkeydown="if(event.key==='Enter')addStudent()" />
+      <button class="add-btn" onclick="addStudent()">추가</button>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-confirm" onclick="closeEditModal()">완료</button>
+    </div>
+  </div>
+</div>
+
+<!-- 설정 패널 -->
+<div class="settings-overlay" id="settingsOverlay" onclick="if(event.target===this)closeSettings()">
+  <div class="settings-panel">
+    <div class="sp-hdr">
+      <div class="sp-title">설정</div>
+      <button class="icon-btn" onclick="closeSettings()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="sp-sec">
+      <div class="sp-label">Google Apps Script URL</div>
+      <input class="sp-url" id="settingsUrl" type="url" placeholder="배포된 웹앱 URL" />
+      <button class="btn-confirm" style="width:100%;padding:10px;border-radius:8px" onclick="saveUrl()">저장</button>
+    </div>
+    <div class="sp-sec">
+      <div class="sp-label">아침자습 반 <span class="sbadge sbadge-m">7:50</span></div>
+      <div class="cm-list" id="cmMorning"></div>
+      <button class="sp-add-btn" onclick="openAddClassModal('morning')"><i class="ti ti-plus"></i> 반 추가</button>
+    </div>
+    <div class="sp-sec">
+      <div class="sp-label">수업 반 <span class="sbadge sbadge-c">8:30~</span></div>
+      <div class="cm-list" id="cmClass"></div>
+      <button class="sp-add-btn" onclick="openAddClassModal('class')"><i class="ti ti-plus"></i> 반 추가</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const LABEL = {present:'출석', absent:'결석', late:'지각'};
+
+// 결석/지각 빠른 사유 프리셋
+const PRESETS = {
+  absent: ['질병','가족행사','체험학습','사고','무단결석'],
+  late:   ['교통 지연','늦잠','병원','기타']
+};
+
+const DEFAULT_DATA = {
+  morning: {
+    '3-1(아침자습)': ['김가연','김나연','김은서','김지윤','문설화','이봄','이혜윤','정예은','진예솜','강태윤','김주현','김하진','나호연','류성현','문보검','박노윤','백인우','서영재','유건우','윤유섭','이시형','이유찬','이준규','전영재','정승호','한유찬','홍성주']
+  },
+  class: {
+    '과탐실1반':[],'과탐실2반':[],'과탐실3반':[],
+    '과탐실4반':[],'과탐실5반':[],'과탐실6반':[],
+    '3-1화학':[],'3-6화학':[],'3-7화학':[]
+  }
+};
+
+let D = {morning:{}, class:{}};  // 학생 명단
+let A = {morning:{}, class:{}};  // 출석: A[ses][cls][idx] = 'present'|'absent'|'late'
+let M = {morning:{}, class:{}};  // 사유: M[ses][cls][idx] = '문자열'
+let ses = 'morning', cur = '', mode = 'present';
+let editSes='', editCls='', addSes='morning';
+let memoIdx = -1;
+
+// ── INIT ──
+function init() {
+  const d = new Date();
+  document.getElementById('headerDate').textContent =
+    d.toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
+  load();
+  const url = localStorage.getItem('scriptUrl')||'';
+  document.getElementById('urlInput').value = url;
+  document.getElementById('settingsUrl').value = url;
+  updateModeUI();
+  renderTabs();
+  renderGrid();
+}
+
+// ── STORAGE ──
+function save() {
+  try {
+    localStorage.setItem('att4', JSON.stringify({
+      D, A, M,
+      savedDate: new Date().toISOString().slice(0,10),
+      ses, cur
+    }));
+  } catch(e) {}
+}
+
+function load() {
+  try {
+    const raw = localStorage.getItem('att4');
+    if (!raw) { reset(); return; }
+    const s = JSON.parse(raw);
+    D = s.D || JSON.parse(JSON.stringify(DEFAULT_DATA));
+    ses = s.ses || 'morning';
+    const today = new Date().toISOString().slice(0,10);
+    if (s.savedDate && s.savedDate !== today) {
+      A = {morning:{}, class:{}};
+      M = {morning:{}, class:{}};
+      setTimeout(()=>toast('새 날짜 — 출석 자동 초기화','ok'), 400);
+    } else {
+      A = s.A || {morning:{}, class:{}};
+      M = s.M || {morning:{}, class:{}};
+    }
+    ['morning','class'].forEach(x=>{ if(!D[x])D[x]={}; if(!A[x])A[x]={}; if(!M[x])M[x]={}; });
+    const list = Object.keys(D[ses]);
+    cur = list.includes(s.cur) ? s.cur : (list[0]||'');
+  } catch(e) { reset(); }
+}
+
+function reset() {
+  D = JSON.parse(JSON.stringify(DEFAULT_DATA));
+  A = {morning:{}, class:{}}; M = {morning:{}, class:{}};
+  ses = 'morning'; cur = Object.keys(D.morning)[0];
+}
+
+// ── SESSION ──
+function switchSession(s) {
+  ses = s;
+  ['morning','class'].forEach(x=>document.getElementById('tab-'+x).classList.toggle('active',x===s));
+  cur = Object.keys(D[ses])[0]||'';
+  mode = 'present'; updateModeUI();
+  renderTabs(); renderGrid(); save();
+}
+
+// ── TABS ──
+function renderTabs() {
+  document.getElementById('classTabs').innerHTML =
+    Object.keys(D[ses]).map(c=>
+      `<button class="class-tab${c===cur?' active':''}" onclick="switchClass('${esc(c)}')">${c}</button>`
+    ).join('') +
+    `<button class="add-tab-btn" onclick="openAddClassModal('${ses}')"><i class="ti ti-plus"></i></button>`;
+}
+function switchClass(c) { cur=c; renderTabs(); renderGrid(); save(); }
+
+// ── GRID ──
+function renderGrid() {
+  const grid = document.getElementById('studentGrid');
+  const students = D[ses]?.[cur]||[];
+  if (!students.length) {
+    grid.innerHTML=`<div class="empty-state">학생이 없어요.<br>설정 → 반 편집에서 학생을 추가하세요.</div>`;
+    updateStats(); return;
+  }
+  if (!A[ses]) A[ses]={}; if (!M[ses]) M[ses]={};
+  grid.innerHTML = students.map((name,i)=>{
+    const st = A[ses]?.[cur]?.[i]||'';
+    const memo = M[ses]?.[cur]?.[i]||'';
+    const hasMemo = memo && st && st!=='present';
+    return `<div class="student-card ${st}" id="c${i}">
+      ${hasMemo?`<i class="card-memo-icon ti ti-pencil"></i>`:''}
+      <div class="card-num">${String(i+1).padStart(2,'0')}</div>
+      <div class="card-name">${name}</div>
+      <div class="card-badge">${LABEL[st]||'미입력'}</div>
+      ${st&&st!=='present'?`<div class="card-memo">${memo||''}</div>`:''}
+    </div>`;
+  }).join('');
+
+  // 이벤트 부착 (longpress + 우클릭)
+  students.forEach((_,i) => {
+    const card = document.getElementById('c'+i);
+    if (!card) return;
+    card.addEventListener('click', ()=>tap(i));
+    card.addEventListener('contextmenu', e=>{ e.preventDefault(); openMemo(i); });
+    // 모바일 long press (500ms)
+    let lt;
+    card.addEventListener('touchstart', ()=>{ lt=setTimeout(()=>openMemo(i), 500); }, {passive:true});
+    card.addEventListener('touchend', ()=>clearTimeout(lt));
+    card.addEventListener('touchmove', ()=>clearTimeout(lt));
+  });
+  updateStats();
+}
+
+function updateCard(i) {
+  const card = document.getElementById('c'+i);
+  if (!card) return;
+  const st = A[ses]?.[cur]?.[i]||'';
+  const memo = M[ses]?.[cur]?.[i]||'';
+  const hasMemo = memo && st && st!=='present';
+  card.className = `student-card ${st}`;
+  card.innerHTML = `
+    ${hasMemo?`<i class="card-memo-icon ti ti-pencil"></i>`:''}
+    <div class="card-num">${card.querySelector('.card-num').textContent}</div>
+    <div class="card-name">${card.querySelector('.card-name').textContent}</div>
+    <div class="card-badge">${LABEL[st]||'미입력'}</div>
+    ${st&&st!=='present'?`<div class="card-memo">${memo||'사유 없음'}</div>`:''}
+  `;
+}
+
+function updateStats() {
+  const students = D[ses]?.[cur]||[];
+  const a = A[ses]?.[cur]||{};
+  let p=0,ab=0,la=0;
+  students.forEach((_,i)=>{ if(a[i]==='present')p++; else if(a[i]==='absent')ab++; else if(a[i]==='late')la++; });
+  document.getElementById('statTotal').textContent = students.length;
+  document.getElementById('statPresent').textContent = p;
+  document.getElementById('statAbsent').textContent = ab;
+  document.getElementById('statLate').textContent = la;
+}
+
+// ── 전체 출석 ──
+function allPresent() {
+  const students = D[ses]?.[cur]||[];
+  if (!A[ses]) A[ses]={}; if (!A[ses][cur]) A[ses][cur]={};
+  students.forEach((_,i)=>{ A[ses][cur][i]='present'; });
+  renderGrid(); save(); toast('전체 출석 처리 ✓','ok');
+}
+
+// ── MODE ──
+function setMode(m) { mode=m; updateModeUI(); }
+function updateModeUI() {
+  document.getElementById('modePresent').classList.toggle('active', mode==='present');
+  document.getElementById('modeAbsent').classList.toggle('active', mode==='absent');
+  document.getElementById('modeLate').classList.toggle('active', mode==='late');
+}
+
+// ── 카드 탭 (바로 상태 변경, 팝업 없음) ──
+function tap(i) {
+  if (!A[ses]) A[ses]={}; if (!A[ses][cur]) A[ses][cur]={};
+  // 같은 상태 다시 탭 → 미입력으로
+  if (A[ses][cur][i] === mode) {
+    delete A[ses][cur][i];
+    if (M[ses]?.[cur]) delete M[ses][cur][i];
+  } else {
+    A[ses][cur][i] = mode;
+    // 출석으로 바꾸면 사유 제거
+    if (mode === 'present' && M[ses]?.[cur]) delete M[ses][cur][i];
+  }
+  updateCard(i); updateStats(); save();
+}
+
+// ── 사유 메모 ──
+function openMemo(i) {
+  const st = A[ses]?.[cur]?.[i]||'';
+  // 출석 상태면 메모 불필요 안내
+  if (!st || st === 'present') {
+    toast('결석 또는 지각 상태일 때 사유를 입력할 수 있어요','err'); return;
+  }
+  memoIdx = i;
+  const name = D[ses]?.[cur]?.[i]||'';
+  const curMemo = M[ses]?.[cur]?.[i]||'';
+  document.getElementById('memoName').textContent = name;
+  const statusEl = document.getElementById('memoStatus');
+  statusEl.textContent = LABEL[st];
+  statusEl.className = `memo-student-status ${st}`;
+  const presets = PRESETS[st]||[];
+  document.getElementById('memoPresets').innerHTML = presets.map(p=>
+    `<button class="memo-preset" onclick="selectPreset('${p}')">${p}</button>`
+  ).join('');
+  document.getElementById('memoText').value = curMemo;
+  document.getElementById('memoOverlay').classList.add('show');
+  setTimeout(()=>document.getElementById('memoText').focus(), 300);
+}
+
+function selectPreset(p) {
+  const ta = document.getElementById('memoText');
+  ta.value = p; ta.focus();
+}
+
+function saveMemo() {
+  const text = document.getElementById('memoText').value.trim();
+  if (!M[ses]) M[ses]={}; if (!M[ses][cur]) M[ses][cur]={};
+  M[ses][cur][memoIdx] = text;
+  closeMemo(); updateCard(memoIdx); save();
+}
+
+function clearMemo() {
+  if (M[ses]?.[cur]) delete M[ses][cur][memoIdx];
+  document.getElementById('memoText').value='';
+  closeMemo(); updateCard(memoIdx); save();
+}
+
+function closeMemo() {
+  document.getElementById('memoOverlay').classList.remove('show');
+  memoIdx = -1;
+}
+
+function resetAll() {
+  A[ses][cur]={}; M[ses][cur]={};
+  renderGrid(); save(); toast('초기화');
+}
+
+// ── 반 추가 ──
+function openAddClassModal(s) {
+  addSes=s;
+  document.getElementById('addClassTitle').textContent=(s==='morning'?'아침자습':'수업')+' 반 추가';
+  document.getElementById('newClassName').value='';
+  document.getElementById('newStudentList').value='';
+  document.getElementById('addClassModal').classList.add('show');
+  setTimeout(()=>document.getElementById('newClassName').focus(),100);
+}
+function closeAddModal() { document.getElementById('addClassModal').classList.remove('show'); }
+function confirmAddClass() {
+  const name = document.getElementById('newClassName').value.trim();
+  if (!name) { toast('반 이름 입력','err'); return; }
+  const students = document.getElementById('newStudentList').value.trim().split('\n').map(s=>s.trim()).filter(Boolean);
+  if (!D[addSes]) D[addSes]={};
+  D[addSes][name] = students;
+  if (!A[addSes]) A[addSes]={}; if (!A[addSes][name]) A[addSes][name]={};
+  if (!M[addSes]) M[addSes]={}; if (!M[addSes][name]) M[addSes][name]={};
+  closeAddModal();
+  if (addSes===ses) { cur=name; renderTabs(); renderGrid(); }
+  renderCmLists(); save(); toast(`${name} 추가`,'ok');
+}
+
+// ── 학생 편집 ──
+function openEditModal(s,c) {
+  editSes=s; editCls=c;
+  document.getElementById('editModalTitle').textContent=c+' 학생 편집';
+  document.getElementById('addStudentName').value='';
+  renderSmList();
+  document.getElementById('editModal').classList.add('show');
+}
+function closeEditModal() {
+  document.getElementById('editModal').classList.remove('show');
+  if (editSes===ses && editCls===cur) renderGrid();
+  renderCmLists(); save();
+}
+function renderSmList() {
+  const students = D[editSes]?.[editCls]||[];
+  const el = document.getElementById('smList');
+  if (!students.length) { el.innerHTML=`<div style="text-align:center;color:var(--tx3);font-size:13px;padding:12px 0">학생 없음</div>`; return; }
+  el.innerHTML = students.map((n,i)=>
+    `<div class="sm-row"><div class="sm-num">${i+1}</div><div class="sm-name">${n}</div><button class="sm-del" onclick="delStudent(${i})"><i class="ti ti-x"></i></button></div>`
+  ).join('');
+}
+function addStudent() {
+  const inp = document.getElementById('addStudentName');
+  const name = inp.value.trim(); if (!name) return;
+  if (!D[editSes][editCls]) D[editSes][editCls]=[];
+  D[editSes][editCls].push(name);
+  inp.value=''; renderSmList(); inp.focus();
+}
+function delStudent(i) {
+  D[editSes][editCls].splice(i,1);
+  const a=A[editSes]?.[editCls]||{}, na={};
+  Object.keys(a).forEach(k=>{ const ki=+k; if(ki<i)na[ki]=a[ki]; else if(ki>i)na[ki-1]=a[ki]; });
+  A[editSes][editCls]=na;
+  const m=M[editSes]?.[editCls]||{}, nm={};
+  Object.keys(m).forEach(k=>{ const ki=+k; if(ki<i)nm[ki]=m[ki]; else if(ki>i)nm[ki-1]=m[ki]; });
+  M[editSes][editCls]=nm;
+  renderSmList();
+}
+
+// ── 설정 ──
+function openSettings() {
+  document.getElementById('settingsUrl').value=localStorage.getItem('scriptUrl')||'';
+  renderCmLists();
+  document.getElementById('settingsOverlay').classList.add('show');
+}
+function closeSettings() { document.getElementById('settingsOverlay').classList.remove('show'); }
+function saveUrl() {
+  const url=document.getElementById('settingsUrl').value.trim();
+  localStorage.setItem('scriptUrl',url);
+  document.getElementById('urlInput').value=url;
+  toast('URL 저장','ok');
+}
+function renderCmLists() {
+  ['morning','class'].forEach(s=>{
+    const el=document.getElementById('cm'+s[0].toUpperCase()+s.slice(1));
+    const list=Object.keys(D[s]||{});
+    if(!list.length){el.innerHTML=`<div style="font-size:13px;color:var(--tx3);padding:4px 0">반 없음</div>`;return;}
+    el.innerHTML=list.map(c=>`
+      <div class="cm-item">
+        <div class="cm-info"><div class="cm-name">${c}</div><div class="cm-meta">${(D[s][c]||[]).length}명</div></div>
+        <div class="cm-btns">
+          <button class="cm-edit" onclick="openEditModal('${esc(s)}','${esc(c)}')"><i class="ti ti-pencil"></i></button>
+          <button class="cm-del" onclick="delClass('${esc(s)}','${esc(c)}')"><i class="ti ti-trash"></i></button>
+        </div>
+      </div>`).join('');
+  });
+}
+function delClass(s,c) {
+  if(!confirm(`'${c}' 삭제?`))return;
+  delete D[s][c]; if(A[s])delete A[s][c]; if(M[s])delete M[s][c];
+  if(s===ses&&c===cur){cur=Object.keys(D[s])[0]||'';renderTabs();renderGrid();}
+  renderCmLists(); save();
+}
+
+// ── 시트 저장 ──
+function todayKey(){const d=new Date();return`${d.getMonth()+1}/${d.getDate()}`;}
+
+async function saveAttendance(){
+  const url=(document.getElementById('urlInput').value||localStorage.getItem('scriptUrl')||'').trim();
+  if(!url){toast('URL을 입력하세요','err');return;}
+  const students=D[ses]?.[cur]||[];
+  const a=A[ses]?.[cur]||{};
+  const m=M[ses]?.[cur]||{};
+  const records=students.map((name,i)=>({
+    name,
+    status: LABEL[a[i]]||'미입력',
+    memo: m[i]||''
+  }));
+  const btn=document.getElementById('saveBtn');
+  btn.disabled=true; btn.innerHTML='<i class="ti ti-loader" style="font-size:15px"></i> 저장 중...';
+  try{
+    const res=await fetch(url,{method:'POST',body:JSON.stringify({action:'saveAttendance',session:ses,class:cur,date:todayKey(),records})});
+    const r=await res.json();
+    toast(r.message||'저장 완료 ✓','ok');
+    setSyncStatus('saved');
+  }catch{toast('저장 실패 — URL 확인','err'); setSyncStatus('error');}
+  finally{
+    btn.disabled=false;
+    btn.innerHTML='<i class="ti ti-device-floppy" style="font-size:15px"></i> 시트 저장';
+  }
+}
+
+// ── 실시간 동기화 (시트 → 앱) ──
+let syncTimer = null;
+let lastSyncTime = 0;
+
+async function syncFromSheet(silent=true) {
+  const url=(document.getElementById('urlInput').value||localStorage.getItem('scriptUrl')||'').trim();
+  if(!url) return;
+  const students=D[ses]?.[cur]||[];
+  if(!students.length) return;
+
+  try {
+    setSyncStatus('syncing');
+    const params = new URLSearchParams({
+      action:'getAttendance', session:ses, class:cur, date:todayKey()
+    });
+    const res = await fetch(`${url}?${params}`);
+    const r = await res.json();
+    if(!r.records || !r.records.length) { setSyncStatus('idle'); return; }
+
+    // 이름 기반으로 출석 데이터 덮어쓰기
+    if(!A[ses]) A[ses]={}; if(!A[ses][cur]) A[ses][cur]={};
+    if(!M[ses]) M[ses]={}; if(!M[ses][cur]) M[ses][cur]={};
+
+    const statusMap={'출석':'present','결석':'absent','지각':'late'};
+    r.records.forEach(rec => {
+      const idx = students.indexOf(rec.name);
+      if(idx === -1) return;
+      if(rec.status && statusMap[rec.status]) {
+        A[ses][cur][idx] = statusMap[rec.status];
+      } else {
+        delete A[ses][cur][idx];
+      }
+      if(rec.memo) M[ses][cur][idx] = rec.memo;
+      else delete M[ses][cur][idx];
+    });
+
+    save();
+    renderGrid();
+    lastSyncTime = Date.now();
+    setSyncStatus('synced');
+    if(!silent) toast('동기화 완료 ✓','ok');
+  } catch(e) {
+    setSyncStatus('error');
+  }
+}
+
+function setSyncStatus(status) {
+  const el = document.getElementById('syncDot');
+  if(!el) return;
+  const map = {
+    idle:   {color:'var(--tx3)',    title:'동기화 대기'},
+    syncing:{color:'#EF9F27',       title:'동기화 중...'},
+    synced: {color:'var(--present-badge)', title:'동기화됨'},
+    saved:  {color:'var(--present-badge)', title:'저장됨'},
+    error:  {color:'var(--absent-badge)',  title:'오류'}
+  };
+  const s = map[status]||map.idle;
+  el.style.background = s.color;
+  el.title = s.title;
+}
+
+function startAutoSync() {
+  if(syncTimer) clearInterval(syncTimer);
+  syncFromSheet(true); // 첫 진입시 즉시
+  syncTimer = setInterval(()=>syncFromSheet(true), 30000); // 30초마다
+}
+
+// 탭/반 바꿀 때도 즉시 동기화
+const _origSwitchSession = switchSession;
+function switchSession(s) {
+  _origSwitchSession(s);
+  setTimeout(()=>syncFromSheet(true), 300);
+}
+const _origSwitchClass = switchClass;
+function switchClass(c) {
+  _origSwitchClass(c);
+  setTimeout(()=>syncFromSheet(true), 300);
+}
+
+function esc(s){return s.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}
+function toast(msg,type=''){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className=`toast ${type} show`;
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+if('serviceWorker'in navigator)navigator.serviceWorker.register('/checkAttendance/sw.js').catch(()=>{});
+init();
+startAutoSync();
+</script>
+</body>
+</html>
