@@ -1,8 +1,8 @@
 const CACHE_NAME = 'attendance-v1';
 const ASSETS = [
-  '/attendance/',
-  '/attendance/index.html',
-  '/attendance/manifest.json'
+  '/checkAttendance/',
+  '/checkAttendance/index.html',
+  '/checkAttendance/manifest.json'
 ];
 
 self.addEventListener('install', e => {
