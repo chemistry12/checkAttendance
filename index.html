@@ -687,11 +687,12 @@ function updateStats() {
 // ── 전체 출석 ──
 function allPresent() {
   const students = D[ses]?.[cur]||[];
-  if (!A[ses]) A[ses]={}; if (!A[ses][cur]) A[ses][cur]={};
+  if (!A[ses]) A[ses]={};
+  if (!A[ses][cur]) A[ses][cur]={};
   students.forEach((name,i)=>{ 
-    if(name) A[ses][cur][i]='present'; // 결번 제외
+    if(name) A[ses][cur][i]='present';
   });
-  renderGrid(); save(); toast('전체 출석 처리 ✓','ok');
+  save(); renderGrid(); toast('전체 출석 처리 ✓','ok');
 }
 
 // ── MODE ──
@@ -714,20 +715,17 @@ function tap(i) {
   const prev = A[ses][cur][i] || '';
 
   if (prev === mode && mode !== 'present') {
-    // 결석/지각/조퇴 → 같은 상태 재탭 → 미입력 토글
     delete A[ses][cur][i];
     if (M[ses]?.[cur]) delete M[ses][cur][i];
   } else if (prev === mode && mode === 'present') {
-    // 출석 → 출석 모드 재탭 → 아무것도 안 함 (출석 유지)
     return;
   } else {
-    // 다른 상태로 변경
     A[ses][cur][i] = mode;
     if (mode === 'present' && M[ses]?.[cur]) delete M[ses][cur][i];
   }
   updateCard(i); updateStats(); save();
 }
-
+  
 // ── 사유 메모 ──
 function openMemo(i) {
   const st = A[ses]?.[cur]?.[i]||'';
