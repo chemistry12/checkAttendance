@@ -717,8 +717,11 @@ function tap(i) {
     // 결석/지각/조퇴 → 같은 상태 재탭 → 미입력 토글
     delete A[ses][cur][i];
     if (M[ses]?.[cur]) delete M[ses][cur][i];
+  } else if (prev === mode && mode === 'present') {
+    // 출석 → 출석 모드 재탭 → 아무것도 안 함 (출석 유지)
+    return;
   } else {
-    // 어떤 상태든 현재 모드로 즉시 변경
+    // 다른 상태로 변경
     A[ses][cur][i] = mode;
     if (mode === 'present' && M[ses]?.[cur]) delete M[ses][cur][i];
   }
