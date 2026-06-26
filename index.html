@@ -713,14 +713,13 @@ function tap(i) {
   if (!A[ses][cur]) A[ses][cur]={};
   const prev = A[ses][cur][i] || '';
 
-  if (prev === mode) {
-    // 같은 상태 탭 → 미입력 (토글)
+  if (prev === mode && mode !== 'present') {
+    // 결석/지각/조퇴 → 같은 상태 재탭 → 미입력 토글
     delete A[ses][cur][i];
     if (M[ses]?.[cur]) delete M[ses][cur][i];
   } else {
     // 어떤 상태든 현재 모드로 즉시 변경
     A[ses][cur][i] = mode;
-    // 출석으로 바꾸면 사유 삭제, 다른 상태로 바꾸면 기존 사유 유지
     if (mode === 'present' && M[ses]?.[cur]) delete M[ses][cur][i];
   }
   updateCard(i); updateStats(); save();
