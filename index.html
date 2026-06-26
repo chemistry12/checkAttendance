@@ -657,13 +657,15 @@ function updateCard(i) {
     <div class="card-badge">${LABEL[st]||'미입력'}</div>
     ${st&&st!=='present'?`<div class="card-memo">${memo||''}</div>`:''}
   `;
-  // innerHTML 교체 후 이벤트 재부착
-  card.onclick = ()=>tap(i);
-  card.oncontextmenu = e=>{ e.preventDefault(); openMemo(i); };
+  // 기존 이벤트 완전 제거 후 새로 부착
+  const newCard = card.cloneNode(true);
+  card.parentNode.replaceChild(newCard, card);
+  newCard.onclick = ()=>tap(i);
+  newCard.oncontextmenu = e=>{ e.preventDefault(); openMemo(i); };
   let lt;
-  card.addEventListener('touchstart', ()=>{ lt=setTimeout(()=>openMemo(i), 500); }, {passive:true});
-  card.addEventListener('touchend', ()=>clearTimeout(lt));
-  card.addEventListener('touchmove', ()=>clearTimeout(lt));
+  newCard.addEventListener('touchstart', ()=>{ lt=setTimeout(()=>openMemo(i), 500); }, {passive:true});
+  newCard.addEventListener('touchend', ()=>clearTimeout(lt));
+  newCard.addEventListener('touchmove', ()=>clearTimeout(lt));
 }
 
 function updateStats() {
