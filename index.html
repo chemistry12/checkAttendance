@@ -56,7 +56,7 @@ html,body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-se
 .add-tab-btn{flex-shrink:0;width:28px;height:28px;border-radius:50%;border:1px dashed var(--bd2);background:transparent;color:var(--tx3);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px}
 
 /* STATS */
-.stats-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:10px 16px;background:var(--surf);border-bottom:.5px solid var(--bd);position:sticky;top:0;z-index:49}
+.stats-bar{cursor:pointer;display:grid;grid-template-columns:repeat(5,1fr);gap:8px;padding:10px 16px;background:var(--surf);border-bottom:.5px solid var(--bd);position:sticky;top:0;z-index:49}
 .stat-item{text-align:center}
 .stat-num{font-size:22px;font-weight:700;line-height:1}
 .stat-label{font-size:11px;color:var(--tx3);margin-top:2px}
@@ -64,6 +64,7 @@ html,body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-se
 .s-present .stat-num{color:var(--present-badge)}
 .s-absent .stat-num{color:var(--absent-badge)}
 .s-late .stat-num{color:var(--late-badge)}
+.s-early .stat-num{color:var(--early-badge)}
 
 /* ACTION BAR */
 .action-bar{background:var(--surf);border-bottom:.5px solid var(--bd);padding:10px 16px;display:flex;flex-direction:column;gap:8px;position:sticky;top:0;z-index:48}
@@ -182,6 +183,36 @@ html,body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-se
 .memo-clear{flex:1;padding:12px;border-radius:10px;border:.5px solid var(--bd2);background:var(--surf2);color:var(--tx2);font-size:14px;font-weight:600;cursor:pointer}
 .memo-save{flex:2;padding:12px;border-radius:10px;border:none;background:var(--blue);color:#fff;font-size:14px;font-weight:600;cursor:pointer}
 
+/* 사유 시트: 상태 선택 + 사유 칩 */
+.memo-status-row{display:flex;gap:6px;margin-bottom:12px}
+.st-chip{flex:1;padding:8px 2px;border-radius:8px;border:2px solid var(--bd);background:var(--surf2);color:var(--tx2);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+.st-chip.sel.present{background:var(--present-bg);border-color:var(--present-bd);color:var(--present-tx)}
+.st-chip.sel.absent{background:var(--absent-bg);border-color:var(--absent-bd);color:var(--absent-tx)}
+.st-chip.sel.late{background:var(--late-bg);border-color:var(--late-bd);color:var(--late-tx)}
+.st-chip.sel.early{background:var(--early-bg);border-color:var(--early-bd);color:var(--early-tx)}
+.st-chip.sel.none{background:var(--bd);border-color:var(--bd2);color:var(--tx)}
+.memo-preset.sel{background:var(--blue);border-color:var(--blue);color:#fff}
+.memo-student-status.present{background:var(--present-badge);color:#fff}
+.memo-student-status.none{background:var(--bd);color:var(--tx2)}
+
+/* 오늘 출결 현황 */
+.sum-group{margin-bottom:14px}
+.sum-group-hd{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;margin-bottom:6px}
+.sum-cnt{font-size:11px;padding:1px 8px;border-radius:20px;color:#fff}
+.sum-row{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;margin-bottom:4px;cursor:pointer;border:.5px solid var(--bd)}
+.sum-row.absent{background:var(--absent-bg);border-color:var(--absent-bd);color:var(--absent-tx)}
+.sum-row.late{background:var(--late-bg);border-color:var(--late-bd);color:var(--late-tx)}
+.sum-row.early{background:var(--early-bg);border-color:var(--early-bd);color:var(--early-tx)}
+.sum-num{font-size:11px;opacity:.7;width:22px;flex-shrink:0}
+.sum-name{font-size:14px;font-weight:600;flex-shrink:0}
+.sum-memo{font-size:12px;flex:1;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:.85}
+.sum-none{font-size:13px;color:var(--tx3);padding:2px 2px 0;line-height:1.6}
+.sum-copy{width:100%;padding:11px;border-radius:10px;border:none;background:var(--blue);color:#fff;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;margin-top:4px}
+
+/* 나가기 확인 */
+.exit-warn{font-size:13px;color:var(--absent-badge);background:var(--absent-bg);border-radius:8px;padding:10px 12px;margin:0 16px;line-height:1.5}
+.exit-msg{font-size:14px;color:var(--tx2);text-align:center;padding:4px 16px 12px}
+
 /* MODAL (공통) */
 .modal-overlay{display:none;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.45);align-items:center;justify-content:center;padding:20px}
 .modal-overlay.show{display:flex}
@@ -249,7 +280,9 @@ html,body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-se
     </div>
     <div style="display:flex;gap:6px">
       <button class="icon-btn" onclick="openLateStats()" id="lateStatsBtn" title="지각 통계" style="display:none"><i class="ti ti-chart-bar"></i></button>
+      <button class="icon-btn" onclick="openSummary()" title="오늘 출결 현황"><i class="ti ti-list-details"></i></button>
       <button class="icon-btn" onclick="openSettings()"><i class="ti ti-settings"></i></button>
+      <button class="icon-btn" onclick="openExit()" title="나가기"><i class="ti ti-logout"></i></button>
     </div>
   </div>
   <!-- 날짜 선택 -->
@@ -267,11 +300,12 @@ html,body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-se
 </div>
 
 <!-- STATS -->
-<div class="stats-bar" style="position:static">
+<div class="stats-bar" style="position:static" onclick="openSummary()" title="눌러서 출결 현황 보기">
   <div class="stat-item s-total"><div class="stat-num" id="statTotal">0</div><div class="stat-label">전체</div></div>
   <div class="stat-item s-present"><div class="stat-num" id="statPresent">0</div><div class="stat-label">출석</div></div>
   <div class="stat-item s-absent"><div class="stat-num" id="statAbsent">0</div><div class="stat-label">결석</div></div>
   <div class="stat-item s-late"><div class="stat-num" id="statLate">0</div><div class="stat-label">지각</div></div>
+  <div class="stat-item s-early"><div class="stat-num" id="statEarly">0</div><div class="stat-label">조퇴</div></div>
 </div>
 
 <!-- ACTION BAR -->
@@ -290,7 +324,7 @@ html,body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-se
     <div class="mode-div"></div>
     <button class="reset-btn" onclick="resetAll()">초기화</button>
   </div>
-  <div class="memo-hint">✏️ 사유: 모바일 길게 누르기 · PC 우클릭</div>
+  <div class="memo-hint">✏️ 결석/지각/조퇴 카드를 다시 누르면 상태 변경과 사유 입력</div>
 </div>
 
 </div><!-- /sticky wrap -->
@@ -304,7 +338,7 @@ html,body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-se
     <div id="syncDot" style="width:8px;height:8px;border-radius:50%;background:var(--tx3);flex-shrink:0;transition:background .3s"></div>
     <span id="syncLabel">대기 중</span>
   </div>
-  <button class="btn-load" id="loadBtn" onclick="syncFromSheet()" title="시트에서 불러오기">
+  <button class="btn-load" id="loadBtn" onclick="manualSync()" title="시트에서 불러오기">
     <i class="ti ti-refresh" style="font-size:15px"></i>
   </button>
   <button class="btn-save" id="saveBtn" onclick="saveAttendance()">
@@ -313,7 +347,7 @@ html,body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-se
 </div>
 
 <!-- 사유 메모 시트 (결석/지각 탭 시) -->
-<div class="memo-overlay" id="memoOverlay" onclick="if(event.target===this)closeMemo()">
+<div class="memo-overlay" id="memoOverlay" onclick="if(event.target===this)memoOutsideTap()">
   <div class="memo-sheet">
     <div class="memo-handle"></div>
     <div class="memo-student">
@@ -321,14 +355,17 @@ html,body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-se
       <span class="memo-student-status" id="memoStatus"></span>
     </div>
     <div class="memo-body">
-      <div class="memo-label">사유 선택 (빠른 입력)</div>
-      <div class="memo-presets" id="memoPresets"></div>
-      <div class="memo-label">직접 입력</div>
-      <textarea class="memo-textarea" id="memoText" placeholder="사유를 직접 입력하세요"></textarea>
+      <div class="memo-label">상태</div>
+      <div class="memo-status-row" id="memoStatusRow"></div>
+      <div id="memoReasonWrap">
+        <div class="memo-label">사유 구분 (누르면 선택, 다시 누르면 해제)</div>
+        <div class="memo-presets" id="memoPresets"></div>
+        <div class="memo-label">상세 내용</div>
+        <textarea class="memo-textarea" id="memoText" placeholder="예: 두통으로 3교시 후 조퇴"></textarea>
+      </div>
     </div>
     <div class="memo-footer">
       <button class="memo-clear" onclick="closeMemo()">취소</button>
-      <button class="memo-clear" style="background:var(--absent-bg);color:var(--absent-badge)" onclick="clearMemo()">출석으로</button>
       <button class="memo-save" onclick="saveMemo()">저장</button>
     </div>
   </div>
@@ -361,6 +398,28 @@ html,body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-se
     <div class="modal-footer">
       <button class="btn-confirm" onclick="closeEditModal()">완료</button>
     </div>
+  </div>
+</div>
+
+<!-- 오늘 출결 현황 -->
+<div class="late-stats-overlay" id="summaryOverlay" onclick="if(event.target===this)closeSummary()">
+  <div class="late-stats-sheet">
+    <div class="ls-header">
+      <div class="ls-title" id="summaryTitle">출결 현황</div>
+      <button class="icon-btn" onclick="closeSummary()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="ls-body" id="summaryBody"></div>
+  </div>
+</div>
+
+<!-- 나가기 확인 -->
+<div class="memo-overlay" id="exitOverlay" onclick="if(event.target===this)closeExit()">
+  <div class="memo-sheet">
+    <div class="memo-handle"></div>
+    <div class="memo-student"><div class="memo-student-name">앱을 종료할까요?</div></div>
+    <div class="exit-msg" id="exitMsg"></div>
+    <div id="exitWarn"></div>
+    <div class="memo-footer" id="exitFooter"></div>
   </div>
 </div>
 
@@ -428,11 +487,9 @@ const LABEL = {present:'출석', absent:'결석', late:'지각', early:'조퇴'}
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx7tE-s30OYYpaZ8BkYAUAVgka865m3mAGV_YNlvJ-NyuEwDeBeuRX8Ng_xrBeQ-dSx/exec';
 function getUrl() { return localStorage.getItem('scriptUrl') || SCRIPT_URL; }
 
-const PRESETS = {
-  absent: ['질병','인정','기타'],
-  late:   ['질병','인정','기타'],
-  early:  ['질병','인정','기타']
-};
+const PRESETS = ['질병','인정','기타'];
+const ST_ORDER = ['present','absent','late','early',''];
+const NEEDS_MEMO = st => st==='absent' || st==='late' || st==='early';
 
 const DEFAULT_DATA = {
   morning: {
@@ -452,6 +509,22 @@ let ses = 'morning', cur = '', mode = 'present';
 let editSes='', editCls='', addSes='morning';
 let memoIdx = -1;
 let syncTimer = null;
+
+// ── 저장 안 한 변경 추적 (반+날짜 단위) ──
+let dirty = {};
+function dKey(s=ses, c=cur) { return `${s}|${c}|${todayKey()}`; }
+function markDirty() { dirty[dKey()] = 1; setSyncStatus('dirty','저장 안 됨'); }
+function clearDirty(k) { delete dirty[k]; }
+function isDirty(s=ses, c=cur) { return !!dirty[dKey(s,c)]; }
+function dirtyList() {
+  return Object.keys(dirty).map(k=>{ const [s,c,d]=k.split('|'); return `${s==='morning'?'담임':'수업'} ${c} (${d})`; });
+}
+function confirmDiscardAll() {
+  const list = dirtyList();
+  if (!list.length) return true;
+  if (!confirm(`시트에 저장하지 않은 변경이 있어요.\n${list.join('\n')}\n\n저장하지 않고 날짜를 바꿀까요?`)) return false;
+  dirty = {}; return true;
+}
 
 // ── 날짜 관리 ──
 let selectedDate = new Date(); // 선택된 날짜 (Date 객체)
@@ -483,6 +556,7 @@ function moveDate(delta) {
   d.setDate(d.getDate() + delta);
   const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate()+1);
   if (d >= tomorrow) return;
+  if (!confirmDiscardAll()) return;
   selectedDate = d;
   updateDateUI();
   syncFromSheet();
@@ -500,6 +574,7 @@ function openDatePicker() {
 
 function onDatePick(val) {
   if (!val) return;
+  if (!confirmDiscardAll()) { updateDateUI(); return; }
   selectedDate = new Date(val + 'T00:00:00');
   updateDateUI();
   syncFromSheet();
@@ -532,7 +607,7 @@ function updateLateStatsBtn() {
 function save() {
   try {
     localStorage.setItem('att5', JSON.stringify({
-      D, A, M,
+      D, A, M, dirty,
       savedDate: new Date().toISOString().slice(0,10),
       ses, cur
     }));
@@ -564,6 +639,7 @@ function load() {
     } else {
       A = s.A || {morning:{}, class:{}};
       M = s.M || {morning:{}, class:{}};
+      dirty = s.dirty || {};
     }
     ['morning','class'].forEach(x=>{ if(!D[x])D[x]={}; if(!A[x])A[x]={}; if(!M[x])M[x]={}; });
     const list = Object.keys(D[ses]);
@@ -626,19 +702,28 @@ function renderGrid() {
     </div>`;
   }).join('');
 
-  // 이벤트 부착 (longpress + 우클릭) - 결번 제외
+  // 이벤트 부착 (탭 + 길게 누르기 + 우클릭) - 결번 제외
   students.forEach((name,i) => {
-    if (!name) return; // 결번 스킵
+    if (!name) return;
     const card = document.getElementById('c'+i);
-    if (!card) return;
-    card.addEventListener('click', ()=>tap(i));
-    card.addEventListener('contextmenu', e=>{ e.preventDefault(); openMemo(i); });
-    let lt;
-    card.addEventListener('touchstart', ()=>{ lt=setTimeout(()=>openMemo(i), 500); }, {passive:true});
-    card.addEventListener('touchend', ()=>clearTimeout(lt));
-    card.addEventListener('touchmove', ()=>clearTimeout(lt));
+    if (card) attachCardEvents(card, i);
   });
   updateStats();
+}
+
+function attachCardEvents(card, i) {
+  let lt, longPressed = false;
+  card.addEventListener('click', ()=>{
+    if (longPressed) { longPressed = false; return; } // 길게 누른 뒤 따라오는 클릭 무시
+    tap(i);
+  });
+  card.addEventListener('contextmenu', e=>{ e.preventDefault(); openMemo(i); });
+  card.addEventListener('touchstart', ()=>{
+    longPressed = false;
+    lt = setTimeout(()=>{ longPressed = true; openMemo(i); }, 500);
+  }, {passive:true});
+  card.addEventListener('touchend', ()=>clearTimeout(lt));
+  card.addEventListener('touchmove', ()=>clearTimeout(lt));
 }
 
 function updateCard(i) {
@@ -660,12 +745,7 @@ function updateCard(i) {
   // 기존 이벤트 완전 제거 후 새로 부착
   const newCard = card.cloneNode(true);
   card.parentNode.replaceChild(newCard, card);
-  newCard.onclick = ()=>tap(i);
-  newCard.oncontextmenu = e=>{ e.preventDefault(); openMemo(i); };
-  let lt;
-  newCard.addEventListener('touchstart', ()=>{ lt=setTimeout(()=>openMemo(i), 500); }, {passive:true});
-  newCard.addEventListener('touchend', ()=>clearTimeout(lt));
-  newCard.addEventListener('touchmove', ()=>clearTimeout(lt));
+  attachCardEvents(newCard, i);
 }
 
 function updateStats() {
@@ -683,7 +763,8 @@ function updateStats() {
   document.getElementById('statTotal').textContent = total;
   document.getElementById('statPresent').textContent = p;
   document.getElementById('statAbsent').textContent = ab;
-  document.getElementById('statLate').textContent = la + (ea>0?`+${ea}`:'');
+  document.getElementById('statLate').textContent = la;
+  document.getElementById('statEarly').textContent = ea;
 }
 
 // ── 전체 출석 ──
@@ -691,10 +772,13 @@ function allPresent() {
   const students = D[ses]?.[cur]||[];
   if (!A[ses]) A[ses]={};
   if (!A[ses][cur]) A[ses][cur]={};
-  students.forEach((name,i)=>{ 
-    if(name) A[ses][cur][i]='present';
+  // 이미 결석/지각/조퇴로 입력한 학생은 건드리지 않고, 미입력 학생만 출석 처리
+  let n = 0;
+  students.forEach((name,i)=>{
+    if(name && !A[ses][cur][i]) { A[ses][cur][i]='present'; n++; }
   });
-  save(); renderGrid(); toast('전체 출석 처리 ✓','ok');
+  if (!n) { toast('미입력 학생이 없어요'); return; }
+  markDirty(); save(); renderGrid(); toast(`미입력 ${n}명 출석 처리 ✓`,'ok');
 }
 
 // ── MODE ──
@@ -707,70 +791,89 @@ function updateModeUI() {
 }
 
 // ── 카드 탭 ──
-// 출석 모드: 탭 → 바로 변경
-// 결석/지각/조퇴 모드: 
-//   - 미입력/출석 카드 탭 → 바로 변경
-//   - 이미 결석/지각/조퇴 카드 탭 → 사유 팝업 (취소=유지, 사유없음=출석으로)
+// 미입력/출석 카드: 지금 선택된 모드로 바로 변경
+// 결석/지각/조퇴 카드: 실수로 바뀌지 않도록 바로 바꾸지 않고 상세 창을 엶
 function tap(i) {
   if (!A[ses]) A[ses]={};
   if (!A[ses][cur]) A[ses][cur]={};
   const prev = A[ses][cur][i] || '';
+  if (NEEDS_MEMO(prev)) { openMemo(i); return; }
+  if (prev === mode) return;
+  A[ses][cur][i] = mode;
+  markDirty(); updateCard(i); updateStats(); save();
+}
 
-  if (prev === mode && mode !== 'present') {
-    delete A[ses][cur][i];
-    if (M[ses]?.[cur]) delete M[ses][cur][i];
-  } else if (prev === mode && mode === 'present') {
-    return;
-  } else {
-    A[ses][cur][i] = mode;
-    if (mode === 'present' && M[ses]?.[cur]) delete M[ses][cur][i];
-  }
-  updateCard(i); updateStats(); save();
+// ── 상세 창 (상태 + 사유) ──
+// 사유 저장 형식: "질병: 상세내용" / "질병" / "상세내용"
+let memoSt = '', memoPreset = '', memoInit = '';
+function splitMemo(memo) {
+  const m = (memo||'').match(/^(질병|인정|기타)(?::\s*([\s\S]*))?$/);
+  if (m) return { preset: m[1], text: m[2]||'' };
+  return { preset: '', text: memo||'' };
 }
-  
-// ── 사유 메모 ──
+function joinMemo(preset, text) {
+  text = (text||'').trim();
+  if (preset && text) return `${preset}: ${text}`;
+  return preset || text;
+}
+
 function openMemo(i) {
-  const st = A[ses]?.[cur]?.[i]||'';
-  if (!st || st === 'present') {
-    toast('결석·지각·조퇴 상태일 때 사유를 입력할 수 있어요','err'); return;
-  }
   memoIdx = i;
-  const name = D[ses]?.[cur]?.[i]||'';
-  const curMemo = M[ses]?.[cur]?.[i]||'';
-  const {name: displayName} = parseName(name);
+  const st = A[ses]?.[cur]?.[i]||'';
+  const {name: displayName} = parseName(D[ses]?.[cur]?.[i]||'');
+  const parts = splitMemo(M[ses]?.[cur]?.[i]||'');
+  memoSt = st; memoPreset = parts.preset;
   document.getElementById('memoName').textContent = displayName;
-  const statusEl = document.getElementById('memoStatus');
-  statusEl.textContent = LABEL[st];
-  statusEl.className = `memo-student-status ${st}`;
-  const presets = PRESETS[st]||[];
-  document.getElementById('memoPresets').innerHTML = presets.map(p=>
-    `<button class="memo-preset" onclick="selectPreset('${p}')">${p}</button>`
-  ).join('');
-  document.getElementById('memoText').value = curMemo;
+  document.getElementById('memoText').value = parts.text;
+  memoInit = memoSnapshot();
+  renderMemoSheet();
   document.getElementById('memoOverlay').classList.add('show');
-  setTimeout(()=>document.getElementById('memoText').focus(), 300);
 }
+
+function memoSnapshot() {
+  return memoSt + '|' + memoPreset + '|' + document.getElementById('memoText').value;
+}
+
+function renderMemoSheet() {
+  const statusEl = document.getElementById('memoStatus');
+  statusEl.textContent = LABEL[memoSt] || '미입력';
+  statusEl.className = `memo-student-status ${memoSt||'none'}`;
+  document.getElementById('memoStatusRow').innerHTML = ST_ORDER.map(st=>
+    `<button class="st-chip ${st||'none'}${st===memoSt?' sel':''}" onclick="selectStatus('${st}')">${LABEL[st]||'미입력'}</button>`
+  ).join('');
+  document.getElementById('memoPresets').innerHTML = PRESETS.map(p=>
+    `<button class="memo-preset${p===memoPreset?' sel':''}" onclick="selectPreset('${p}')">${p}</button>`
+  ).join('');
+  // 출석/미입력이면 사유 칸 숨김 (입력해 둔 글은 지우지 않음)
+  document.getElementById('memoReasonWrap').style.display = NEEDS_MEMO(memoSt) ? '' : 'none';
+}
+
+function selectStatus(st) { memoSt = st; renderMemoSheet(); }
 
 function selectPreset(p) {
-  const ta = document.getElementById('memoText');
-  ta.value = p; ta.focus();
+  // 상세 내용은 그대로 두고 구분만 바꿈
+  memoPreset = (memoPreset === p) ? '' : p;
+  renderMemoSheet();
 }
 
 function saveMemo() {
-  const text = document.getElementById('memoText').value.trim();
+  const i = memoIdx;
+  if (i < 0) return;
+  if (!A[ses]) A[ses]={}; if (!A[ses][cur]) A[ses][cur]={};
   if (!M[ses]) M[ses]={}; if (!M[ses][cur]) M[ses][cur]={};
-  M[ses][cur][memoIdx] = text;
-  closeMemo(); updateCard(memoIdx); save();
+  if (memoSt) A[ses][cur][i] = memoSt; else delete A[ses][cur][i];
+  const memo = NEEDS_MEMO(memoSt) ? joinMemo(memoPreset, document.getElementById('memoText').value) : '';
+  if (memo) M[ses][cur][i] = memo; else delete M[ses][cur][i];
+  const changed = memoSnapshot() !== memoInit;
+  closeMemo(); updateCard(i); updateStats();
+  if (changed) markDirty();
+  save();
 }
 
-function clearMemo() {
-  // 사유없음 = 출석으로 변경
-  if (!A[ses]) A[ses]={}; if (!A[ses][cur]) A[ses][cur]={};
-  A[ses][cur][memoIdx] = 'present';
-  if (M[ses]?.[cur]) delete M[ses][cur][memoIdx];
-  document.getElementById('memoText').value='';
-  closeMemo(); updateCard(memoIdx); updateStats(); save();
-  toast('출석으로 변경됨');
+function memoOutsideTap() {
+  // 입력하던 내용이 있으면 바깥을 눌러도 닫지 않음
+  if (memoSnapshot() !== memoInit) { toast('취소 또는 저장을 눌러주세요'); return; }
+  closeMemo();
 }
 
 function closeMemo() {
@@ -778,9 +881,133 @@ function closeMemo() {
   memoIdx = -1;
 }
 
+// ── 오늘 출결 현황 (출석 제외) ──
+function summaryData() {
+  const students = D[ses]?.[cur]||[];
+  const a = A[ses]?.[cur]||{}, m = M[ses]?.[cur]||{};
+  const g = {absent:[], late:[], early:[], none:[]};
+  students.forEach((raw,i)=>{
+    if (!raw) return;
+    const st = a[i]||'';
+    const item = {i, raw, name: parseName(raw).name, memo: m[i]||''};
+    if (NEEDS_MEMO(st)) g[st].push(item);
+    else if (!st) g.none.push(item);
+  });
+  return g;
+}
+
+function openSummary() {
+  const g = summaryData();
+  const dateLabel = isToday(selectedDate) ? `오늘 ${todayKey()}` : todayKey();
+  document.getElementById('summaryTitle').textContent = `📋 ${cur} ${dateLabel}`;
+  const groups = [['absent','결석','var(--absent-badge)'],['late','지각','var(--late-badge)'],['early','조퇴','var(--early-badge)']];
+  let html = '';
+  groups.forEach(([k,label,color])=>{
+    html += `<div class="sum-group"><div class="sum-group-hd">${label} <span class="sum-cnt" style="background:${color}">${g[k].length}</span></div>`;
+    html += g[k].length
+      ? g[k].map(it=>`<div class="sum-row ${k}" onclick="closeSummary();openMemo(${it.i})">
+          <span class="sum-num">${it.i+1}</span><span class="sum-name">${it.name}</span>
+          <span class="sum-memo">${it.memo||'사유 없음'}</span></div>`).join('')
+      : `<div class="sum-none">없음</div>`;
+    html += `</div>`;
+  });
+  if (g.none.length) {
+    html += `<div class="sum-group"><div class="sum-group-hd">미입력 <span class="sum-cnt" style="background:var(--tx3)">${g.none.length}</span></div>
+      <div class="sum-none">${g.none.map(it=>it.name).join(', ')}</div></div>`;
+  }
+  html += `<button class="sum-copy" onclick="copySummary()"><i class="ti ti-copy"></i> 텍스트로 복사</button>`;
+  document.getElementById('summaryBody').innerHTML = html;
+  document.getElementById('summaryOverlay').classList.add('show');
+}
+function closeSummary() { document.getElementById('summaryOverlay').classList.remove('show'); }
+
+function copySummary() {
+  const g = summaryData();
+  const fmt = arr => arr.map(it=>it.memo ? `${it.name}(${it.memo})` : it.name).join(', ');
+  const lines = [`[${cur}] ${todayKey()} 출결`];
+  [['absent','결석'],['late','지각'],['early','조퇴']].forEach(([k,l])=>{
+    lines.push(`${l} ${g[k].length}명${g[k].length ? ': ' + fmt(g[k]) : ''}`);
+  });
+  if (g.none.length) lines.push(`미입력 ${g.none.length}명: ${g.none.map(it=>it.name).join(', ')}`);
+  const text = lines.join('\n');
+  const done = () => toast('복사됨 ✓','ok');
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(text).then(done).catch(()=>fallbackCopy(text, done));
+  } else fallbackCopy(text, done);
+}
+function fallbackCopy(text, done) {
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); done(); } catch { toast('복사 실패','err'); }
+  ta.remove();
+}
+
+// ── 뒤로가기 막기 + 나가기 ──
+let trapArmed = false, exiting = false;
+function armBackTrap() {
+  if (trapArmed || exiting) return;
+  history.pushState({attTrap:1}, '');
+  trapArmed = true;
+}
+// 크롬은 사용자가 화면을 한 번 누른 뒤에 넣은 기록만 뒤로가기에 걸리므로, 첫 터치 때 장치
+document.addEventListener('pointerdown', armBackTrap, true);
+window.addEventListener('popstate', ()=>{
+  trapArmed = false;
+  if (exiting) return;
+  if (!closeTopOverlay()) openExit();
+  armBackTrap();
+});
+
+function closeTopOverlay() {
+  const isOpen = id => document.getElementById(id)?.classList.contains('show');
+  if (isOpen('exitOverlay'))     { closeExit(); return true; }
+  if (isOpen('memoOverlay'))     { closeMemo(); return true; }
+  if (isOpen('editModal'))       { closeEditModal(); return true; }
+  if (isOpen('addClassModal'))   { closeAddModal(); return true; }
+  if (isOpen('summaryOverlay'))  { closeSummary(); return true; }
+  if (isOpen('lateStatsOverlay')){ closeLateStats(); return true; }
+  if (isOpen('settingsOverlay')) { closeSettings(); return true; }
+  return false;
+}
+
+function openExit() {
+  const list = dirtyList();
+  const curDirty = isDirty();
+  document.getElementById('exitMsg').textContent = list.length
+    ? '시트에 저장하지 않은 변경이 있어요.'
+    : '모든 출결이 시트에 저장되어 있어요.';
+  document.getElementById('exitWarn').innerHTML = list.length
+    ? `<div class="exit-warn">${list.map(x=>'• '+x).join('<br>')}</div>` : '';
+  document.getElementById('exitFooter').innerHTML = `
+    <button class="memo-clear" onclick="closeExit()">취소</button>
+    ${curDirty ? `<button class="memo-save" onclick="saveAndExit()">저장 후 나가기</button>` : ''}
+    <button class="${curDirty ? 'memo-clear' : 'memo-save'}" onclick="exitApp()">${list.length ? '그냥 나가기' : '나가기'}</button>`;
+  document.getElementById('exitOverlay').classList.add('show');
+}
+function closeExit() { document.getElementById('exitOverlay').classList.remove('show'); }
+
+async function saveAndExit() {
+  closeExit();
+  const ok = await saveAttendance();
+  if (ok) exitApp();
+}
+
+function exitApp() {
+  closeExit();
+  exiting = true;
+  try { window.close(); } catch {}
+  if (trapArmed) { trapArmed = false; history.back(); }
+  // 창이 닫히지 않는 환경이면 다음 뒤로가기로 바로 종료되게 3초간 대기
+  setTimeout(()=>toast('뒤로가기를 한 번 더 누르면 종료돼요'), 250);
+  setTimeout(()=>{ exiting = false; }, 3000);
+}
+
 function resetAll() {
+  if (!confirm(`${cur}의 이 날짜 출결과 사유를 모두 지울까요?`)) return;
+  if (!A[ses]) A[ses]={}; if (!M[ses]) M[ses]={};
   A[ses][cur]={}; M[ses][cur]={};
-  renderGrid(); save(); toast('초기화');
+  markDirty(); renderGrid(); save(); toast('초기화');
 }
 
 // ── 반 추가 ──
@@ -889,6 +1116,7 @@ async function saveAttendance(){
   const records=students
     .map((name,i)=>({name, status:LABEL[a[i]]||'미입력', memo:m[i]||''}))
     .filter(r=>r.name); // 결번 제외
+  const k = dKey();
   const btn=document.getElementById('saveBtn');
   btn.disabled=true; btn.innerHTML='<i class="ti ti-loader" style="font-size:15px"></i> 저장 중...';
   try{
@@ -896,11 +1124,15 @@ async function saveAttendance(){
       action:'saveAttendance',session:ses,class:cur,date:todayKey(),records
     })});
     const r=await res.json();
+    if (r.error) throw new Error(r.error);
+    clearDirty(k); save();
     toast(r.message||'저장 완료 ✓','ok');
     setSyncStatus('synced','저장됨');
+    return true;
   }catch{
-    toast('저장 실패 — URL 확인','err');
+    toast('저장 실패 — 연결 확인','err');
     setSyncStatus('error','저장 실패');
+    return false;
   }finally{
     btn.disabled=false;
     btn.innerHTML='<i class="ti ti-device-floppy" style="font-size:15px"></i> 시트 저장';
@@ -910,12 +1142,14 @@ async function saveAttendance(){
 // ── 시트에서 불러오기 ──
 // 요청 1번으로 명단+출결을 함께 받음. 반/날짜를 빠르게 바꿔도 마지막 요청 결과만 화면에 반영.
 let syncSeq = 0;
-async function syncFromSheet(){
+async function syncFromSheet(force){
   const url = getUrl();
   if(!url) { toast('URL이 설정되지 않았습니다','err'); return; }
 
   const mySeq = ++syncSeq;
-  const s = ses, c = cur, dKey = todayKey(), today = isToday(selectedDate);
+  // 저장 안 한 변경이 있는 반은 자동으로 덮어쓰지 않음
+  if (!force && isDirty()) { setSyncStatus('dirty','저장 안 됨'); return; }
+  const s = ses, c = cur, dKey_ = todayKey(), today = isToday(selectedDate);
 
   const btn = document.getElementById('loadBtn');
   if(btn) btn.querySelector('i').style.transform='rotate(360deg)';
@@ -923,12 +1157,14 @@ async function syncFromSheet(){
 
   try{
     const params = new URLSearchParams({
-      action:'getAttendance', session:s, class:c, date:dKey
+      action:'getAttendance', session:s, class:c, date:dKey_
     });
     const r = await (await fetch(`${url}?${params}`)).json();
 
-    // 그 사이에 다른 반/날짜로 바뀌었으면 이 결과는 버림
+    // 그 사이에 다른 반/날짜로 바뀌었거나 새로 입력을 시작했으면 이 결과는 버림
     if(mySeq !== syncSeq) return;
+    if(!force && isDirty(s,c)) { setSyncStatus('dirty','저장 안 됨'); return; }
+    delete dirty[`${s}|${c}|${dKey_}`];
 
     if(!D[s]) D[s]={};
     if(!A[s]) A[s]={};
@@ -971,11 +1207,16 @@ async function syncFromSheet(){
   }
 }
 
+function manualSync() {
+  if (isDirty() && !confirm('저장하지 않은 변경이 있어요. 시트 내용으로 덮어쓸까요?')) return;
+  syncFromSheet(true);
+}
+
 function setSyncStatus(status, label=''){
   const dot = document.getElementById('syncDot');
   const lbl = document.getElementById('syncLabel');
   if(!dot) return;
-  const colors = {idle:'var(--tx3)', syncing:'#EF9F27', synced:'var(--present-badge)', error:'var(--absent-badge)'};
+  const colors = {idle:'var(--tx3)', syncing:'#EF9F27', synced:'var(--present-badge)', error:'var(--absent-badge)', dirty:'#EF9F27'};
   dot.style.background = colors[status]||colors.idle;
   if(lbl) lbl.textContent = label;
 }
