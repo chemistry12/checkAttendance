@@ -364,7 +364,7 @@ html,body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-se
     <div class="mode-div"></div>
     <button class="reset-btn" onclick="resetAll()">초기화</button>
   </div>
-  <div class="memo-hint">✏️ 결석/지각/조퇴 카드를 다시 누르면 상태 변경, 사유, 서류 체크</div>
+  <div class="memo-hint">✏️ 결석/지각/조퇴 카드를 다시 누르면 상태 변경과 사유 입력</div>
 </div>
 
 </div><!-- /sticky wrap -->
@@ -962,7 +962,9 @@ function joinMemo(preset, text, doc) {
   return s;
 }
 function showMemo(memo) { return String(memo||'').replace(DOC_MARK, '📄✓'); }
-function needsDoc(memo) { const p = splitMemo(memo); return DOC_PRESETS.includes(p.preset) && !p.doc; }
+// 증빙서류 체크는 담임반(담임 탭)에서만 사용
+function docOn(s = ses) { return s === 'morning'; }
+function needsDoc(memo) { if (!docOn()) return false; const p = splitMemo(memo); return DOC_PRESETS.includes(p.preset) && !p.doc; }
 
 function openMemo(i) {
   memoIdx = i;
@@ -994,7 +996,7 @@ function renderMemoSheet() {
   ).join('');
   // 출석/미입력이면 사유 칸 숨김 (입력해 둔 글은 지우지 않음)
   document.getElementById('memoReasonWrap').style.display = NEEDS_MEMO(memoSt) ? '' : 'none';
-  document.getElementById('docToggle').style.display = DOC_PRESETS.includes(memoPreset) ? '' : 'none';
+  document.getElementById('docToggle').style.display = (docOn() && DOC_PRESETS.includes(memoPreset)) ? '' : 'none';
 }
 
 function selectStatus(st) { memoSt = st; renderMemoSheet(); }
@@ -1483,10 +1485,11 @@ function moveMonth(d) {
 }
 function renderStats() {
   const body = document.getElementById('lateStatsBody');
-  let html = `<div class="st-tabs">
+  if (!docOn()) statsTab = 'month';
+  let html = docOn() ? `<div class="st-tabs">
     <button class="st-tab${statsTab==='month'?' on':''}" onclick="setStatsTab('month')">월별 요약</button>
     <button class="st-tab${statsTab==='docs'?' on':''}" onclick="setStatsTab('docs')">서류 체크${docBadge()}</button>
-  </div>`;
+  </div>` : '';
   html += statsTab === 'month' ? monthHtml() : docsHtml();
   body.innerHTML = html;
 }
