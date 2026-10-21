@@ -908,66 +908,66 @@ async function saveAttendance(){
 }
 
 // ── 시트에서 불러오기 ──
+// 요청 1번으로 명단+출결을 함께 받음. 반/날짜를 빠르게 바꿔도 마지막 요청 결과만 화면에 반영.
+let syncSeq = 0;
 async function syncFromSheet(){
   const url = getUrl();
   if(!url) { toast('URL이 설정되지 않았습니다','err'); return; }
+
+  const mySeq = ++syncSeq;
+  const s = ses, c = cur, dKey = todayKey(), today = isToday(selectedDate);
 
   const btn = document.getElementById('loadBtn');
   if(btn) btn.querySelector('i').style.transform='rotate(360deg)';
   setSyncStatus('syncing','불러오는 중...');
 
   try{
-    // 1. 학생 명단이 비어있으면 먼저 명단 불러오기
-    if(!(D[ses]?.[cur]||[]).filter(n=>n).length) {
-      const pS = new URLSearchParams({ action:'getStudents', session:ses, class:cur });
-      const rS = await (await fetch(`${url}?${pS}`)).json();
-      if(rS.students?.length) {
-        if(!D[ses]) D[ses]={};
-        D[ses][cur] = rS.students;
-        if(!A[ses]) A[ses]={}; if(!A[ses][cur]) A[ses][cur]={};
-        if(!M[ses]) M[ses]={}; if(!M[ses][cur]) M[ses][cur]={};
-      }
-    }
-
-    // 2. 출석 데이터 불러오기
-    const students = D[ses]?.[cur]||[];
     const params = new URLSearchParams({
-      action:'getAttendance', session:ses, class:cur, date:todayKey()
+      action:'getAttendance', session:s, class:c, date:dKey
     });
     const r = await (await fetch(`${url}?${params}`)).json();
 
+    // 그 사이에 다른 반/날짜로 바뀌었으면 이 결과는 버림
+    if(mySeq !== syncSeq) return;
+
+    if(!D[s]) D[s]={};
+    if(!A[s]) A[s]={};
+    if(!M[s]) M[s]={};
+
+    // 앱에 명단이 비어있으면 시트 명단으로 채우기
+    if(!(D[s][c]||[]).filter(n=>n).length && r.students?.length) {
+      D[s][c] = r.students;
+    }
+
     if(!r.records || !r.records.length){
-      // 오늘 날짜면 출석 초기화, 과거 날짜면 그냥 빈 상태로
-      if(!A[ses]) A[ses]={}; A[ses][cur]={};
-      if(!M[ses]) M[ses]={}; M[ses][cur]={};
+      A[s][c]={}; M[s][c]={};
       save(); renderGrid();
-      setSyncStatus('idle', isToday(selectedDate) ? '오늘 출석 없음' : '해당 날짜 데이터 없음');
-      toast(isToday(selectedDate) ? '오늘 출석 데이터 없음 (초기화됨)' : '해당 날짜 데이터 없음');
+      setSyncStatus('idle', today ? '오늘 출석 없음' : '해당 날짜 데이터 없음');
+      toast(today ? '오늘 출석 데이터 없음 (초기화됨)' : '해당 날짜 데이터 없음');
       return;
     }
 
-    if(!A[ses]) A[ses]={}; if(!A[ses][cur]) A[ses][cur]={};
-    if(!M[ses]) M[ses]={}; if(!M[ses][cur]) M[ses][cur]={};
-
+    const students = D[s][c]||[];
+    const newA = {}, newM = {};
     const statusMap={'출석':'present','결석':'absent','지각':'late','조퇴':'early'};
     r.records.forEach(rec=>{
       const idx = students.indexOf(rec.name);
       if(idx===-1) return;
-      if(rec.status && statusMap[rec.status]) A[ses][cur][idx]=statusMap[rec.status];
-      else delete A[ses][cur][idx];
-      if(rec.memo) M[ses][cur][idx]=rec.memo;
-      else delete M[ses][cur][idx];
+      if(rec.status && statusMap[rec.status]) newA[idx]=statusMap[rec.status];
+      if(rec.memo) newM[idx]=rec.memo;
     });
+    A[s][c]=newA; M[s][c]=newM;
 
     save(); renderGrid();
     const now = new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
     setSyncStatus('synced',`${now} 불러옴`);
     toast('불러오기 완료 ✓','ok');
   }catch(e){
+    if(mySeq !== syncSeq) return;
     setSyncStatus('error','불러오기 실패');
     toast('불러오기 실패 — 연결 확인','err');
   }finally{
-    if(btn) btn.querySelector('i').style.transform='';
+    if(btn && mySeq === syncSeq) btn.querySelector('i').style.transform='';
   }
 }
 
