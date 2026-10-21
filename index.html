@@ -504,6 +504,10 @@ html,body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-se
       </button>
     </div>
     <div class="sp-sec">
+      <div class="sp-label">앱 버전</div>
+      <div class="sp-hint" id="appVersion"></div>
+    </div>
+    <div class="sp-sec">
       <div class="sp-label">Google Apps Script URL</div>
       <input class="sp-url" id="settingsUrl" type="url" placeholder="배포된 웹앱 URL" />
       <button class="btn-confirm" style="width:100%;padding:10px;border-radius:8px" onclick="saveUrl()">저장</button>
@@ -1086,11 +1090,37 @@ function fallbackCopy(text, done) {
 }
 
 // ── 뒤로가기 막기 + 나가기 ──
-// 크롬은 "누르기가 끝난 뒤(click)"에 만든 기록만 뒤로가기에 걸어 줌.
-// 그래서 탭(click) 때마다 확인해서 장치를 걸고, 걸어 둔 개수(trapDepth)를 셈.
-let trapDepth = 0, needFresh = true, exiting = false;
+// 1순위: CloseWatcher (안드로이드 크롬의 뒤로가기 전용 기능, 설치형 앱에서도 동작)
+// 2순위: 방문 기록 장치 (CloseWatcher가 없는 브라우저용)
+const APP_VERSION = '2026-10-21 v9';
+let exiting = false;
+function handleBack() {
+  if (!closeTopOverlay()) openExit();
+}
+
+let cw = null, lastBack = 0;
+function backOnce() {
+  const now = Date.now();
+  if (now - lastBack < 300) return;
+  lastBack = now;
+  handleBack();
+}
+const HAS_CW = 'CloseWatcher' in window;
+function armCloseWatcher() {
+  if (!HAS_CW || cw || exiting) return;
+  try {
+    cw = new CloseWatcher();
+    // 뒤로가기 한 번에 cancel과 close가 연달아 올 수 있어서 한 번만 처리
+    cw.oncancel = e => { e.preventDefault(); backOnce(); };
+    // 취소할 수 없는 경우: 이번 감시는 끝나지만 앱은 안 꺼짐 → 바로 새로 걸기
+    cw.onclose = () => { cw = null; if (!exiting) { backOnce(); setTimeout(armCloseWatcher, 0); } };
+  } catch { cw = null; }
+}
+
+let trapDepth = 0, needFresh = true;
 function armBackTrap() {
   if (exiting) return;
+  if (HAS_CW) { armCloseWatcher(); return; }
   if (trapDepth === 0 || (needFresh && trapDepth < 3)) {
     history.pushState({attTrap: Date.now()}, '');
     trapDepth++;
@@ -1101,13 +1131,15 @@ document.addEventListener('click', armBackTrap, true);
 document.addEventListener('touchend', armBackTrap, true);
 document.addEventListener('keydown', armBackTrap, true);
 window.addEventListener('popstate', ()=>{
+  if (HAS_CW) return;
   trapDepth = Math.max(0, trapDepth - 1);
   if (exiting) return;
-  if (!closeTopOverlay()) openExit();
-  // 다음 뒤로가기도 막기 위해 바로 하나 더 걸고, 다음 탭 때 확실한 것으로 한 번 더 걸어 둠
+  handleBack();
   if (trapDepth === 0) { history.pushState({attTrap: Date.now()}, ''); trapDepth = 1; }
   needFresh = true;
 });
+// 앱을 켜자마자(아무것도 누르기 전)도 뒤로가기를 한 번은 막아 줌
+armCloseWatcher();
 
 function closeTopOverlay() {
   const isOpen = id => document.getElementById(id)?.classList.contains('show');
@@ -1146,6 +1178,7 @@ async function saveAndExit() {
 function exitApp() {
   closeExit();
   exiting = true;
+  if (cw) { const w = cw; cw = null; w.destroy(); }
   try { window.close(); } catch {}
   if (trapDepth > 0) { const n = trapDepth; trapDepth = 0; history.go(-n); }
   // 창이 닫히지 않는 환경이면 다음 뒤로가기로 바로 종료되게 3초간 대기
@@ -1225,6 +1258,7 @@ function delStudent(i) {
 function openSettings() {
   document.getElementById('settingsUrl').value=localStorage.getItem('scriptUrl')||'';
   document.getElementById('cfgAuto').checked = !!cfg.autoSave;
+  document.getElementById('appVersion').textContent = `${APP_VERSION} (뒤로가기: ${HAS_CW ? 'CloseWatcher' : '방문 기록'})`;
   renderCmLists();
   document.getElementById('settingsOverlay').classList.add('show');
 }
