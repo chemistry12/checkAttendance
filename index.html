@@ -217,8 +217,6 @@ html,body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-se
 .doc-toggle{display:flex;align-items:center;gap:8px;margin-top:10px;padding:10px 12px;border-radius:10px;background:var(--surf2);border:.5px solid var(--bd2);font-size:14px;font-weight:600;cursor:pointer}
 .doc-toggle input{width:18px;height:18px;accent-color:var(--blue)}
 
-/* 카드 누적 경고 */
-.card-warn{margin-top:4px;font-size:10px;font-weight:700;color:#fff;background:var(--absent-badge);border-radius:6px;padding:1px 4px;display:inline-block}
 
 /* 통계 창 */
 .st-tabs{display:flex;gap:6px;margin-bottom:12px}
@@ -226,7 +224,6 @@ html,body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-se
 .st-tab.on{background:var(--blue);color:#fff;border-color:var(--blue)}
 .st-month{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:12px;font-size:15px;font-weight:700}
 .st-sec{font-size:12px;color:var(--tx3);font-weight:700;margin:14px 0 8px}
-.st-warn{padding:8px 10px;border-radius:8px;background:var(--absent-bg);border:.5px solid var(--absent-bd);color:var(--absent-tx);font-size:13px;margin-bottom:4px;display:flex;justify-content:space-between;gap:8px}
 .st-stu{border:.5px solid var(--bd);border-radius:10px;padding:10px 12px;margin-bottom:8px;background:var(--surf)}
 .st-stu-hd{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
 .st-stu-name{font-size:14px;font-weight:700}
@@ -483,11 +480,9 @@ html,body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-se
       <button class="icon-btn" onclick="closeSettings()"><i class="ti ti-x"></i></button>
     </div>
     <div class="sp-sec">
-      <div class="sp-label">자동 저장 및 누적 경고</div>
+      <div class="sp-label">자동 저장</div>
       <label class="sp-row"><span>자동 저장 (입력 후 몇 초 뒤)</span><input type="checkbox" id="cfgAuto" style="width:20px;height:20px;accent-color:var(--blue)" onchange="setCfg('autoSave', this.checked)"></label>
-      <label class="sp-row"><span>지각 경고 (학년도 누적)</span><span><input class="sp-num" type="number" min="0" id="cfgLate" onchange="setCfg('lateWarn', +this.value||0)"> 회</span></label>
-      <label class="sp-row"><span>미인정 경고 (결석/지각/조퇴 합)</span><span><input class="sp-num" type="number" min="0" id="cfgUnex" onchange="setCfg('unexWarn', +this.value||0)"> 회</span></label>
-      <div class="sp-hint">경고 횟수 이상이면 학생 카드에 빨간 표시가 떠요. 0이면 끔. 학년도는 3월 1일부터 계산해요.</div>
+      <div class="sp-hint">입력하고 몇 초 뒤 자동으로 시트에 저장해요. 끄면 저장 버튼을 눌러야 저장돼요.</div>
     </div>
     <div class="sp-sec">
       <div class="sp-label">구글 시트</div>
@@ -536,7 +531,7 @@ const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx7tE-s30OYYpaZ8BkYA
 function getUrl() { return localStorage.getItem('scriptUrl') || SCRIPT_URL; }
 
 const PRESETS = ['질병','미인정','인정','기타'];
-const DOC_PRESETS = ['질병','인정','기타'];   // 증빙서류가 필요한 구분
+const DOC_PRESETS = ['질병','인정'];   // 증빙서류가 필요한 구분 (미인정, 기타는 필요 없음)
 const DOC_MARK = '[서류✓]';
 const STATUS_MAP = {'출석':'present','결석':'absent','지각':'late','조퇴':'early'};
 const ST_ORDER = ['present','absent','late','early',''];
@@ -562,13 +557,12 @@ let memoIdx = -1;
 let syncTimer = null;
 
 // ── 설정 ──
-const CFG_DEFAULT = { autoSave: true, lateWarn: 3, unexWarn: 3 };
+const CFG_DEFAULT = { autoSave: true };
 let cfg = (()=>{ try { return {...CFG_DEFAULT, ...JSON.parse(localStorage.getItem('attCfg')||'{}')}; } catch { return {...CFG_DEFAULT}; } })();
 function setCfg(k, v) {
   cfg[k] = v;
   try { localStorage.setItem('attCfg', JSON.stringify(cfg)); } catch {}
   if (k === 'autoSave' && v && hasPending()) flush();
-  if (k !== 'autoSave') { refreshWarn(true); }
 }
 
 // ── 저장 대기열 ──
@@ -821,7 +815,6 @@ function renderGrid() {
     updateStats(); return;
   }
   if (!A[ses]) A[ses]={}; if (!M[ses]) M[ses]={};
-  const wc = warnCounts(ses, cur);
   grid.innerHTML = students.map((name,i)=>{
     if (!name) return `<div class="student-card" id="c${i}" style="opacity:.3;cursor:default;border-style:dashed">
       <div class="card-num">${String(i+1).padStart(2,'0')}</div>
@@ -838,7 +831,6 @@ function renderGrid() {
       <div class="card-name">${displayName}</div>
       <div class="card-badge">${LABEL[st]||'미입력'}</div>
       ${st&&st!=='present'?`<div class="card-memo">${showMemo(memo)}</div>`:''}
-      ${warnHtml(wc, name)}
     </div>`;
   }).join('');
 
@@ -881,7 +873,6 @@ function updateCard(i) {
     <div class="card-name">${displayName}</div>
     <div class="card-badge">${LABEL[st]||'미입력'}</div>
     ${st&&st!=='present'?`<div class="card-memo">${showMemo(memo)}</div>`:''}
-    ${warnHtml(warnCounts(ses, cur), rawName)}
   `;
   // 기존 이벤트 완전 제거 후 새로 부착
   const newCard = card.cloneNode(true);
@@ -1095,19 +1086,27 @@ function fallbackCopy(text, done) {
 }
 
 // ── 뒤로가기 막기 + 나가기 ──
-let trapArmed = false, exiting = false;
+// 크롬은 "누르기가 끝난 뒤(click)"에 만든 기록만 뒤로가기에 걸어 줌.
+// 그래서 탭(click) 때마다 확인해서 장치를 걸고, 걸어 둔 개수(trapDepth)를 셈.
+let trapDepth = 0, needFresh = true, exiting = false;
 function armBackTrap() {
-  if (trapArmed || exiting) return;
-  history.pushState({attTrap:1}, '');
-  trapArmed = true;
+  if (exiting) return;
+  if (trapDepth === 0 || (needFresh && trapDepth < 3)) {
+    history.pushState({attTrap: Date.now()}, '');
+    trapDepth++;
+    needFresh = false;
+  }
 }
-// 크롬은 사용자가 화면을 한 번 누른 뒤에 넣은 기록만 뒤로가기에 걸리므로, 첫 터치 때 장치
-document.addEventListener('pointerdown', armBackTrap, true);
+document.addEventListener('click', armBackTrap, true);
+document.addEventListener('touchend', armBackTrap, true);
+document.addEventListener('keydown', armBackTrap, true);
 window.addEventListener('popstate', ()=>{
-  trapArmed = false;
+  trapDepth = Math.max(0, trapDepth - 1);
   if (exiting) return;
   if (!closeTopOverlay()) openExit();
-  armBackTrap();
+  // 다음 뒤로가기도 막기 위해 바로 하나 더 걸고, 다음 탭 때 확실한 것으로 한 번 더 걸어 둠
+  if (trapDepth === 0) { history.pushState({attTrap: Date.now()}, ''); trapDepth = 1; }
+  needFresh = true;
 });
 
 function closeTopOverlay() {
@@ -1148,7 +1147,7 @@ function exitApp() {
   closeExit();
   exiting = true;
   try { window.close(); } catch {}
-  if (trapArmed) { trapArmed = false; history.back(); }
+  if (trapDepth > 0) { const n = trapDepth; trapDepth = 0; history.go(-n); }
   // 창이 닫히지 않는 환경이면 다음 뒤로가기로 바로 종료되게 3초간 대기
   setTimeout(()=>toast('뒤로가기를 한 번 더 누르면 종료돼요'), 250);
   setTimeout(()=>{ exiting = false; }, 3000);
@@ -1226,8 +1225,6 @@ function delStudent(i) {
 function openSettings() {
   document.getElementById('settingsUrl').value=localStorage.getItem('scriptUrl')||'';
   document.getElementById('cfgAuto').checked = !!cfg.autoSave;
-  document.getElementById('cfgLate').value = cfg.lateWarn;
-  document.getElementById('cfgUnex').value = cfg.unexWarn;
   renderCmLists();
   document.getElementById('settingsOverlay').classList.add('show');
 }
@@ -1304,7 +1301,6 @@ async function syncFromSheet(force){
     applyRecords(ses, cur, pending[pk].records);
     save(); renderGrid(); showPendingStatus();
     if (cfg.autoSave) scheduleFlush(500);
-    refreshWarn();
     return;
   }
   const s = ses, c = cur, dKey_ = colKey(), today = isToday(selectedDate);
@@ -1332,7 +1328,6 @@ async function syncFromSheet(force){
       D[s][c] = r.students;
     }
 
-    refreshWarn();
     if(!r.records || !r.records.length){
       A[s][c]={}; M[s][c]={};
       save(); renderGrid();
@@ -1424,40 +1419,6 @@ function schoolYearStart() {
   return `${t.getMonth()+1 >= 3 ? t.getFullYear() : t.getFullYear()-1}-03-01`;
 }
 
-// ── 누적 경고 ──
-function warnCounts(s, c) {
-  if (!allCache[`${s}|${c}`] || (!cfg.lateWarn && !cfg.unexWarn)) return null;
-  const start = schoolYearStart(), cnt = {};
-  Object.entries(mergedDates(s, c)).forEach(([k, recs])=>{
-    if (k.slice(0,10) < start) return;
-    recs.forEach(r=>{
-      const x = cnt[r.name] || (cnt[r.name] = {late:0, unex:0});
-      if (r.status === '지각') x.late++;
-      if (r.status !== '출석' && splitMemo(r.memo).preset === '미인정') x.unex++;
-    });
-  });
-  return cnt;
-}
-function warnParts(x) {
-  if (!x) return [];
-  const parts = [];
-  if (cfg.lateWarn && x.late >= cfg.lateWarn) parts.push(`지각 ${x.late}`);
-  if (cfg.unexWarn && x.unex >= cfg.unexWarn) parts.push(`미인정 ${x.unex}`);
-  return parts;
-}
-function warnHtml(wc, name) {
-  const parts = warnParts(wc?.[name]);
-  return parts.length ? `<div class="card-warn">⚠ ${parts.join(' ')}</div>` : '';
-}
-async function refreshWarn(force) {
-  if (!cfg.lateWarn && !cfg.unexWarn) { renderGrid(); return; }
-  const s = ses, c = cur;
-  try {
-    await fetchAll(s, c, force);
-    if (s === ses && c === cur) renderGrid();
-  } catch {}
-}
-
 // ── 출결 통계 창 (월별 요약 / 서류 체크) ──
 let statsTab = 'month', statsMonth = '', showDone = false;
 async function openLateStats() {
@@ -1528,16 +1489,8 @@ function monthHtml() {
     <button class="date-nav-btn" onclick="moveMonth(1)"><i class="ti ti-chevron-right"></i></button>
   </div>`;
 
-  // 누적 경고 (학년도)
-  const wc = warnCounts(ses, cur) || {};
-  const warns = Object.keys(wc).map(n=>[n, warnParts(wc[n])]).filter(([,p])=>p.length);
-  if (warns.length) {
-    html += `<div class="st-sec">⚠ 누적 경고 (학년도)</div>`;
-    html += warns.map(([n,p])=>`<div class="st-warn"><b>${parseName(n).name}</b><span>${p.join(', ')}</span></div>`).join('');
-  }
-
   const all = names.flatMap(n=>per[n]);
-  html += `<div class="ls-summary" style="margin-top:12px">${KIND.map(([k])=>
+  html += `<div class="ls-summary">${KIND.map(([k])=>
     `<div class="ls-sum-card"><div class="ls-sum-num">${all.filter(r=>r.status===k).length}</div><div class="ls-sum-label">${k}</div></div>`).join('')}</div>`;
 
   if (!names.length) return html + `<div class="ls-empty">이 달에는 결석/지각/조퇴 기록이 없어요</div>`;
@@ -1600,7 +1553,7 @@ function docsHtml() {
   const todo = items.filter(it=>DOC_PRESETS.includes(it.preset) && !it.doc);
   const noKind = items.filter(it=>!it.preset);
   const done = items.filter(it=>it.doc);
-  let html = `<div class="st-sec">서류 미제출 ${todo.length}건 (질병/인정/기타, 학년도)</div>`;
+  let html = `<div class="st-sec">서류 미제출 ${todo.length}건 (질병/인정, 학년도)</div>`;
   html += todo.length
     ? todo.map(it=>docRow(it, `<button class="doc-btn" onclick="toggleDoc('${esc(it.col)}','${esc(it.name)}',true)">제출 ✓</button>`)).join('')
     : `<div class="sum-none">미제출 서류가 없어요 ✨</div>`;
