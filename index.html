@@ -32,6 +32,7 @@
   --present-bg:#04342C; --present-bd:#0F6E56; --present-tx:#9FE1CB;
   --absent-bg:#501313;  --absent-bd:#A32D2D;  --absent-tx:#F7C1C1;
   --late-bg:#412402;    --late-bd:#854F0B;    --late-tx:#FAC775;
+  --early-bg:#2A1F45;   --early-bd:#5E43A0;   --early-tx:#D1C4E9;
 }}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;background:var(--surf2);color:var(--tx)}
@@ -209,6 +210,40 @@ html,body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-se
 .sum-none{font-size:13px;color:var(--tx3);padding:2px 2px 0;line-height:1.6}
 .sum-copy{width:100%;padding:11px;border-radius:10px;border:none;background:var(--blue);color:#fff;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;margin-top:4px}
 
+/* 교시 선택 */
+.period-sel{height:30px;border-radius:8px;border:.5px solid var(--bd2);background:var(--surf2);color:var(--tx);font-size:13px;padding:0 6px;font-family:inherit;flex-shrink:0}
+
+/* 서류 제출 체크 (사유 창) */
+.doc-toggle{display:flex;align-items:center;gap:8px;margin-top:10px;padding:10px 12px;border-radius:10px;background:var(--surf2);border:.5px solid var(--bd2);font-size:14px;font-weight:600;cursor:pointer}
+.doc-toggle input{width:18px;height:18px;accent-color:var(--blue)}
+
+/* 카드 누적 경고 */
+.card-warn{margin-top:4px;font-size:10px;font-weight:700;color:#fff;background:var(--absent-badge);border-radius:6px;padding:1px 4px;display:inline-block}
+
+/* 통계 창 */
+.st-tabs{display:flex;gap:6px;margin-bottom:12px}
+.st-tab{flex:1;padding:8px;border-radius:8px;border:.5px solid var(--bd2);background:var(--surf2);color:var(--tx2);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+.st-tab.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+.st-month{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:12px;font-size:15px;font-weight:700}
+.st-sec{font-size:12px;color:var(--tx3);font-weight:700;margin:14px 0 8px}
+.st-warn{padding:8px 10px;border-radius:8px;background:var(--absent-bg);border:.5px solid var(--absent-bd);color:var(--absent-tx);font-size:13px;margin-bottom:4px;display:flex;justify-content:space-between;gap:8px}
+.st-stu{border:.5px solid var(--bd);border-radius:10px;padding:10px 12px;margin-bottom:8px;background:var(--surf)}
+.st-stu-hd{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.st-stu-name{font-size:14px;font-weight:700}
+.st-stu-cnt{font-size:12px;color:var(--tx2)}
+.st-line{font-size:12px;color:var(--tx2);margin-top:4px;line-height:1.4;cursor:pointer}
+.st-pill{display:inline-block;font-size:11px;font-weight:700;padding:0 6px;border-radius:6px;color:#fff;margin-right:4px}
+.st-pill.absent{background:var(--absent-badge)}.st-pill.late{background:var(--late-badge)}.st-pill.early{background:var(--early-badge)}
+.doc-row{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;border:.5px solid var(--bd);margin-bottom:4px;background:var(--surf)}
+.doc-info{flex:1;min-width:0;cursor:pointer}
+.doc-top{font-size:13px;font-weight:700}
+.doc-memo{font-size:12px;color:var(--tx2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.doc-btn{padding:6px 10px;border-radius:8px;border:none;background:var(--blue);color:#fff;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;font-family:inherit}
+.doc-btn.undo{background:var(--surf2);color:var(--tx2);border:.5px solid var(--bd2)}
+.sp-row{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:14px;margin-bottom:8px}
+.sp-num{width:64px;padding:6px 8px;border-radius:8px;border:.5px solid var(--bd2);background:var(--surf2);color:var(--tx);font-size:14px;font-family:inherit;text-align:center}
+.sp-hint{font-size:11px;color:var(--tx3);line-height:1.5}
+
 /* 나가기 확인 */
 .exit-warn{font-size:13px;color:var(--absent-badge);background:var(--absent-bg);border-radius:8px;padding:10px 12px;margin:0 16px;line-height:1.5}
 .exit-msg{font-size:14px;color:var(--tx2);text-align:center;padding:4px 16px 12px}
@@ -279,7 +314,7 @@ html,body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-se
       <div class="hdr-date" id="headerDate"></div>
     </div>
     <div style="display:flex;gap:6px">
-      <button class="icon-btn" onclick="openLateStats()" id="lateStatsBtn" title="지각 통계" style="display:none"><i class="ti ti-chart-bar"></i></button>
+      <button class="icon-btn" onclick="openLateStats()" id="lateStatsBtn" title="출결 통계"><i class="ti ti-chart-bar"></i></button>
       <button class="icon-btn" onclick="openSummary()" title="오늘 출결 현황"><i class="ti ti-list-details"></i></button>
       <button class="icon-btn" onclick="openSettings()"><i class="ti ti-settings"></i></button>
       <button class="icon-btn" onclick="openExit()" title="나가기"><i class="ti ti-logout"></i></button>
@@ -290,6 +325,11 @@ html,body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-se
     <button class="date-nav-btn" onclick="moveDate(-1)"><i class="ti ti-chevron-left"></i></button>
     <button class="date-display" id="dateDisplay" onclick="openDatePicker()"></button>
     <button class="date-nav-btn" onclick="moveDate(1)" id="dateNextBtn"><i class="ti ti-chevron-right"></i></button>
+    <select class="period-sel" id="periodSel" onchange="onPeriodChange(this.value)" style="display:none">
+      <option value="">교시 없음</option>
+      <option value="1">1교시</option><option value="2">2교시</option><option value="3">3교시</option><option value="4">4교시</option>
+      <option value="5">5교시</option><option value="6">6교시</option><option value="7">7교시</option><option value="8">8교시</option>
+    </select>
     <input type="date" id="datePicker" style="display:none" onchange="onDatePick(this.value)">
   </div>
   <div class="session-tabs">
@@ -324,7 +364,7 @@ html,body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-se
     <div class="mode-div"></div>
     <button class="reset-btn" onclick="resetAll()">초기화</button>
   </div>
-  <div class="memo-hint">✏️ 결석/지각/조퇴 카드를 다시 누르면 상태 변경과 사유 입력</div>
+  <div class="memo-hint">✏️ 결석/지각/조퇴 카드를 다시 누르면 상태 변경, 사유, 서류 체크</div>
 </div>
 
 </div><!-- /sticky wrap -->
@@ -362,6 +402,7 @@ html,body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-se
         <div class="memo-presets" id="memoPresets"></div>
         <div class="memo-label">상세 내용</div>
         <textarea class="memo-textarea" id="memoText" placeholder="예: 두통으로 3교시 후 조퇴"></textarea>
+        <label class="doc-toggle" id="docToggle"><input type="checkbox" id="memoDoc" onchange="memoDoc=this.checked"> 📄 증빙서류 제출함</label>
       </div>
     </div>
     <div class="memo-footer">
@@ -427,7 +468,7 @@ html,body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-se
 <div class="late-stats-overlay" id="lateStatsOverlay" onclick="if(event.target===this)closeLateStats()">
   <div class="late-stats-sheet">
     <div class="ls-header">
-      <div class="ls-title">⏰ 담임반 지각 통계</div>
+      <div class="ls-title" id="statsTitle">📊 출결 통계</div>
       <button class="icon-btn" onclick="closeLateStats()"><i class="ti ti-x"></i></button>
     </div>
     <div class="ls-body" id="lateStatsBody"></div>
@@ -440,6 +481,13 @@ html,body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-se
     <div class="sp-hdr">
       <div class="sp-title">설정</div>
       <button class="icon-btn" onclick="closeSettings()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="sp-sec">
+      <div class="sp-label">자동 저장 및 누적 경고</div>
+      <label class="sp-row"><span>자동 저장 (입력 후 몇 초 뒤)</span><input type="checkbox" id="cfgAuto" style="width:20px;height:20px;accent-color:var(--blue)" onchange="setCfg('autoSave', this.checked)"></label>
+      <label class="sp-row"><span>지각 경고 (학년도 누적)</span><span><input class="sp-num" type="number" min="0" id="cfgLate" onchange="setCfg('lateWarn', +this.value||0)"> 회</span></label>
+      <label class="sp-row"><span>미인정 경고 (결석/지각/조퇴 합)</span><span><input class="sp-num" type="number" min="0" id="cfgUnex" onchange="setCfg('unexWarn', +this.value||0)"> 회</span></label>
+      <div class="sp-hint">경고 횟수 이상이면 학생 카드에 빨간 표시가 떠요. 0이면 끔. 학년도는 3월 1일부터 계산해요.</div>
     </div>
     <div class="sp-sec">
       <div class="sp-label">구글 시트</div>
@@ -487,7 +535,10 @@ const LABEL = {present:'출석', absent:'결석', late:'지각', early:'조퇴'}
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx7tE-s30OYYpaZ8BkYAUAVgka865m3mAGV_YNlvJ-NyuEwDeBeuRX8Ng_xrBeQ-dSx/exec';
 function getUrl() { return localStorage.getItem('scriptUrl') || SCRIPT_URL; }
 
-const PRESETS = ['질병','인정','기타'];
+const PRESETS = ['질병','미인정','인정','기타'];
+const DOC_PRESETS = ['질병','인정','기타'];   // 증빙서류가 필요한 구분
+const DOC_MARK = '[서류✓]';
+const STATUS_MAP = {'출석':'present','결석':'absent','지각':'late','조퇴':'early'};
 const ST_ORDER = ['present','absent','late','early',''];
 const NEEDS_MEMO = st => st==='absent' || st==='late' || st==='early';
 
@@ -510,33 +561,114 @@ let editSes='', editCls='', addSes='morning';
 let memoIdx = -1;
 let syncTimer = null;
 
-// ── 저장 안 한 변경 추적 (반+날짜 단위) ──
-let dirty = {};
-function dKey(s=ses, c=cur) { return `${s}|${c}|${todayKey()}`; }
-function markDirty() { dirty[dKey()] = 1; setSyncStatus('dirty','저장 안 됨'); }
-function clearDirty(k) { delete dirty[k]; }
-function isDirty(s=ses, c=cur) { return !!dirty[dKey(s,c)]; }
-function dirtyList() {
-  return Object.keys(dirty).map(k=>{ const [s,c,d]=k.split('|'); return `${s==='morning'?'담임':'수업'} ${c} (${d})`; });
-}
-function confirmDiscardAll() {
-  const list = dirtyList();
-  if (!list.length) return true;
-  if (!confirm(`시트에 저장하지 않은 변경이 있어요.\n${list.join('\n')}\n\n저장하지 않고 날짜를 바꿀까요?`)) return false;
-  dirty = {}; return true;
+// ── 설정 ──
+const CFG_DEFAULT = { autoSave: true, lateWarn: 3, unexWarn: 3 };
+let cfg = (()=>{ try { return {...CFG_DEFAULT, ...JSON.parse(localStorage.getItem('attCfg')||'{}')}; } catch { return {...CFG_DEFAULT}; } })();
+function setCfg(k, v) {
+  cfg[k] = v;
+  try { localStorage.setItem('attCfg', JSON.stringify(cfg)); } catch {}
+  if (k === 'autoSave' && v && hasPending()) flush();
+  if (k !== 'autoSave') { refreshWarn(true); }
 }
 
-// ── 날짜 관리 ──
+// ── 저장 대기열 ──
+// 입력할 때마다 그 반/날짜의 기록을 통째로 담아 두고(pending), 시트 저장에 성공하면 지움.
+// 앱을 껐다 켜도 남아 있어서, 저장 실패나 날짜 이동으로 입력이 사라지지 않음.
+let pending = {};
+let period = '';
+function dKey(s=ses, c=cur) { return `${s}|${c}|${colKey(s)}`; }
+function hasPending() { return Object.keys(pending).length > 0; }
+function isDirty(s=ses, c=cur) { return !!pending[dKey(s,c)]; }
+function buildRecords(s, c) {
+  const students = D[s]?.[c]||[], a = A[s]?.[c]||{}, m = M[s]?.[c]||{};
+  return students.map((name,i)=>({name, status: LABEL[a[i]]||'미입력', memo: m[i]||''})).filter(r=>r.name);
+}
+function queueCurrent() {
+  pending[dKey()] = { s: ses, c: cur, col: colKey(), records: buildRecords(ses,cur), v: Date.now() + Math.random() };
+}
+function markDirty() {
+  queueCurrent();
+  showPendingStatus();
+  if (cfg.autoSave) scheduleFlush(2500);
+}
+function dirtyList() {
+  return Object.values(pending).map(p=>`${p.s==='morning'?'담임':'수업'} ${p.c} (${shortDate(p.col)})`);
+}
+function showPendingStatus() {
+  const n = Object.keys(pending).length;
+  if (!n) return;
+  setSyncStatus('dirty', cfg.autoSave ? `저장 대기 ${n}건` : '저장 안 됨');
+}
+
+let flushTimer = null, flushing = false, flushAgain = false, failing = false;
+function scheduleFlush(ms) {
+  clearTimeout(flushTimer);
+  flushTimer = setTimeout(()=>flush(), ms);
+}
+async function postJSON(body, keepalive) {
+  const res = await fetch(getUrl(), { method:'POST', body: JSON.stringify(body), keepalive: !!keepalive });
+  return res.json();
+}
+async function flush(opts = {}) {
+  clearTimeout(flushTimer);
+  if (flushing) { flushAgain = true; return false; }
+  if (!hasPending()) return true;
+  flushing = true;
+  setSyncStatus('syncing', '저장 중...');
+  let allOk = true;
+  for (const k of Object.keys(pending)) {
+    const p = pending[k];
+    try {
+      const r = await postJSON({ action:'saveAttendance', session:p.s, class:p.c, date:p.col, records:p.records }, opts.keepalive);
+      if (r.error) throw new Error(r.error);
+      if (pending[k] && pending[k].v === p.v) delete pending[k];   // 저장하는 사이 또 바뀌었으면 남겨 둠
+      const ck = `${p.s}|${p.c}`;
+      if (allCache[ck]) allCache[ck].dates[p.col] = p.records.filter(r=>r.status && r.status!=='미입력');
+    } catch { allOk = false; }
+  }
+  save();
+  flushing = false;
+  if (allOk && !hasPending()) {
+    failing = false;
+    const now = new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
+    setSyncStatus('synced', `${now} 저장됨`);
+  } else if (!allOk) {
+    if (!failing || opts.manual) toast('저장 실패 — 연결되면 자동으로 다시 저장해요','err');
+    failing = true;
+    setSyncStatus('error', `저장 실패 ${Object.keys(pending).length}건 (재시도 대기)`);
+  }
+  if (flushAgain) { flushAgain = false; scheduleFlush(300); }
+  return allOk && !hasPending();
+}
+// 재시도: 30초마다, 인터넷 다시 연결될 때, 앱이 화면에서 사라질 때
+setInterval(()=>{ if (cfg.autoSave && hasPending() && navigator.onLine !== false) flush(); }, 30000);
+window.addEventListener('online', ()=>{ if (cfg.autoSave && hasPending()) flush(); });
+document.addEventListener('visibilitychange', ()=>{
+  if (document.visibilityState === 'hidden' && cfg.autoSave && hasPending()) flush({keepalive:true});
+});
+
+// ── 날짜 관리 ──// ── 날짜 관리 ──
 let selectedDate = new Date(); // 선택된 날짜 (Date 객체)
 
 function dateToKey(d) {
   return `${d.getMonth()+1}/${d.getDate()}`;
 }
+// 한국 시간 기준 날짜 (예전엔 UTC 기준이라 오전 9시 전에는 어제로 인식했음)
+function ymd(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function localToday() { return ymd(new Date()); }
+// 시트 열 이름: "2026-10-21" 또는 수업 교시 "2026-10-21 3교시"
+function colKey(s = ses) { return ymd(selectedDate) + (s==='class' && period ? ` ${period}교시` : ''); }
+function shortDate(k) {
+  const m = String(k).match(/^\d{4}-(\d{2})-(\d{2})(.*)$/);
+  return m ? `${+m[1]}/${+m[2]}${m[3]}` : k;
+}
 function isToday(d) {
   const t = new Date();
   return d.getFullYear()===t.getFullYear() && d.getMonth()===t.getMonth() && d.getDate()===t.getDate();
 }
-function todayKey() { return dateToKey(selectedDate); }
+function todayKey() { return colKey(); }
 
 function updateDateUI() {
   const today = isToday(selectedDate);
@@ -556,7 +688,6 @@ function moveDate(delta) {
   d.setDate(d.getDate() + delta);
   const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate()+1);
   if (d >= tomorrow) return;
-  if (!confirmDiscardAll()) return;
   selectedDate = d;
   updateDateUI();
   syncFromSheet();
@@ -568,13 +699,21 @@ function openDatePicker() {
   const m = String(selectedDate.getMonth()+1).padStart(2,'0');
   const day = String(selectedDate.getDate()).padStart(2,'0');
   picker.value = `${y}-${m}-${day}`;
-  picker.max = new Date().toISOString().slice(0,10);
+  picker.max = localToday();
   picker.click();
+}
+
+function onPeriodChange(v) {
+  period = v; save(); syncFromSheet();
+}
+function updatePeriodUI() {
+  const el = document.getElementById('periodSel');
+  el.style.display = ses==='class' ? '' : 'none';
+  el.value = period;
 }
 
 function onDatePick(val) {
   if (!val) return;
-  if (!confirmDiscardAll()) { updateDateUI(); return; }
   selectedDate = new Date(val + 'T00:00:00');
   updateDateUI();
   syncFromSheet();
@@ -592,23 +731,21 @@ function init() {
   renderTabs();
   renderGrid();
   // 아침자습일 때만 지각통계 버튼 표시
-  updateLateStatsBtn();
-  // 오늘이면 시트에서 불러오기, 날짜 바뀌었으면 초기화만 (🔄 버튼으로 수동 불러오기)
-  const savedDate = (() => { try { return JSON.parse(localStorage.getItem('att5')||'{}').savedDate||''; } catch{ return ''; } })();
-  const today = new Date().toISOString().slice(0,10);
-  if (savedDate === today) syncFromSheet();
+  updatePeriodUI();
+  // 시트에서 불러오기 (저장 대기 중인 반은 대기열 내용을 우선 표시)
+  syncFromSheet();
+  // 지난번에 못 보낸 저장이 있으면 다시 시도
+  if (hasPending() && cfg.autoSave) setTimeout(()=>flush(), 1500);
 }
 
-function updateLateStatsBtn() {
-  document.getElementById('lateStatsBtn').style.display = ses==='morning' ? 'flex' : 'none';
-}
+function updateLateStatsBtn() {}
 
 // ── STORAGE ──
 function save() {
   try {
     localStorage.setItem('att5', JSON.stringify({
-      D, A, M, dirty,
-      savedDate: new Date().toISOString().slice(0,10),
+      D, A, M, pending, period,
+      savedDate: localToday(),
       ses, cur
     }));
   } catch(e) {}
@@ -626,7 +763,9 @@ function load() {
     if (!Object.keys(D.morning||{}).length) D.morning = JSON.parse(JSON.stringify(DEFAULT_DATA.morning));
     if (!Object.keys(D.class||{}).length)   D.class   = JSON.parse(JSON.stringify(DEFAULT_DATA.class));
 
-    const today = new Date().toISOString().slice(0,10);
+    const today = localToday();
+    pending = s.pending || {};
+    period = s.period || '';
     if (s.savedDate && s.savedDate !== today) {
       // 날짜 바뀌면 출석+사유 전체 초기화 (명단은 유지)
       A = {morning:{}, class:{}};
@@ -639,7 +778,6 @@ function load() {
     } else {
       A = s.A || {morning:{}, class:{}};
       M = s.M || {morning:{}, class:{}};
-      dirty = s.dirty || {};
     }
     ['morning','class'].forEach(x=>{ if(!D[x])D[x]={}; if(!A[x])A[x]={}; if(!M[x])M[x]={}; });
     const list = Object.keys(D[ses]);
@@ -659,7 +797,7 @@ function switchSession(s) {
   ['morning','class'].forEach(x=>document.getElementById('tab-'+x).classList.toggle('active',x===s));
   cur = Object.keys(D[ses])[0]||'';
   mode = 'present'; updateModeUI();
-  updateLateStatsBtn();
+  updatePeriodUI();
   renderTabs(); renderGrid(); save();
   syncFromSheet();
 }
@@ -683,6 +821,7 @@ function renderGrid() {
     updateStats(); return;
   }
   if (!A[ses]) A[ses]={}; if (!M[ses]) M[ses]={};
+  const wc = warnCounts(ses, cur);
   grid.innerHTML = students.map((name,i)=>{
     if (!name) return `<div class="student-card" id="c${i}" style="opacity:.3;cursor:default;border-style:dashed">
       <div class="card-num">${String(i+1).padStart(2,'0')}</div>
@@ -698,7 +837,8 @@ function renderGrid() {
       <div class="card-num">${String(i+1).padStart(2,'0')}${num?` <span style="font-size:9px;opacity:.7">${num}</span>`:''}</div>
       <div class="card-name">${displayName}</div>
       <div class="card-badge">${LABEL[st]||'미입력'}</div>
-      ${st&&st!=='present'?`<div class="card-memo">${memo||''}</div>`:''}
+      ${st&&st!=='present'?`<div class="card-memo">${showMemo(memo)}</div>`:''}
+      ${warnHtml(wc, name)}
     </div>`;
   }).join('');
 
@@ -740,7 +880,8 @@ function updateCard(i) {
     <div class="card-num">${String(i+1).padStart(2,'0')}${num?` <span style="font-size:9px;opacity:.7">${num}</span>`:''}</div>
     <div class="card-name">${displayName}</div>
     <div class="card-badge">${LABEL[st]||'미입력'}</div>
-    ${st&&st!=='present'?`<div class="card-memo">${memo||''}</div>`:''}
+    ${st&&st!=='present'?`<div class="card-memo">${showMemo(memo)}</div>`:''}
+    ${warnHtml(warnCounts(ses, cur), rawName)}
   `;
   // 기존 이벤트 완전 제거 후 새로 부착
   const newCard = card.cloneNode(true);
@@ -805,24 +946,31 @@ function tap(i) {
 
 // ── 상세 창 (상태 + 사유) ──
 // 사유 저장 형식: "질병: 상세내용" / "질병" / "상세내용"
-let memoSt = '', memoPreset = '', memoInit = '';
+// 서류 제출 시 끝에 "[서류✓]" 표시
+let memoSt = '', memoPreset = '', memoDoc = false, memoInit = '';
 function splitMemo(memo) {
-  const m = (memo||'').match(/^(질병|인정|기타)(?::\s*([\s\S]*))?$/);
-  if (m) return { preset: m[1], text: m[2]||'' };
-  return { preset: '', text: memo||'' };
+  let s = String(memo||'').trim(), doc = false;
+  if (/\[서류✓\]$/.test(s)) { doc = true; s = s.replace(/\s*\[서류✓\]$/, ''); }
+  const m = s.match(/^(질병|미인정|인정|기타)(?::\s*([\s\S]*))?$/);
+  if (m) return { preset: m[1], text: m[2]||'', doc };
+  return { preset: '', text: s, doc };
 }
-function joinMemo(preset, text) {
+function joinMemo(preset, text, doc) {
   text = (text||'').trim();
-  if (preset && text) return `${preset}: ${text}`;
-  return preset || text;
+  let s = (preset && text) ? `${preset}: ${text}` : (preset || text);
+  if (doc && DOC_PRESETS.includes(preset)) s = s ? `${s} ${DOC_MARK}` : DOC_MARK;
+  return s;
 }
+function showMemo(memo) { return String(memo||'').replace(DOC_MARK, '📄✓'); }
+function needsDoc(memo) { const p = splitMemo(memo); return DOC_PRESETS.includes(p.preset) && !p.doc; }
 
 function openMemo(i) {
   memoIdx = i;
   const st = A[ses]?.[cur]?.[i]||'';
   const {name: displayName} = parseName(D[ses]?.[cur]?.[i]||'');
   const parts = splitMemo(M[ses]?.[cur]?.[i]||'');
-  memoSt = st; memoPreset = parts.preset;
+  memoSt = st; memoPreset = parts.preset; memoDoc = parts.doc;
+  document.getElementById('memoDoc').checked = memoDoc;
   document.getElementById('memoName').textContent = displayName;
   document.getElementById('memoText').value = parts.text;
   memoInit = memoSnapshot();
@@ -831,7 +979,7 @@ function openMemo(i) {
 }
 
 function memoSnapshot() {
-  return memoSt + '|' + memoPreset + '|' + document.getElementById('memoText').value;
+  return memoSt + '|' + memoPreset + '|' + memoDoc + '|' + document.getElementById('memoText').value;
 }
 
 function renderMemoSheet() {
@@ -846,6 +994,7 @@ function renderMemoSheet() {
   ).join('');
   // 출석/미입력이면 사유 칸 숨김 (입력해 둔 글은 지우지 않음)
   document.getElementById('memoReasonWrap').style.display = NEEDS_MEMO(memoSt) ? '' : 'none';
+  document.getElementById('docToggle').style.display = DOC_PRESETS.includes(memoPreset) ? '' : 'none';
 }
 
 function selectStatus(st) { memoSt = st; renderMemoSheet(); }
@@ -862,7 +1011,7 @@ function saveMemo() {
   if (!A[ses]) A[ses]={}; if (!A[ses][cur]) A[ses][cur]={};
   if (!M[ses]) M[ses]={}; if (!M[ses][cur]) M[ses][cur]={};
   if (memoSt) A[ses][cur][i] = memoSt; else delete A[ses][cur][i];
-  const memo = NEEDS_MEMO(memoSt) ? joinMemo(memoPreset, document.getElementById('memoText').value) : '';
+  const memo = NEEDS_MEMO(memoSt) ? joinMemo(memoPreset, document.getElementById('memoText').value, memoDoc) : '';
   if (memo) M[ses][cur][i] = memo; else delete M[ses][cur][i];
   const changed = memoSnapshot() !== memoInit;
   closeMemo(); updateCard(i); updateStats();
@@ -898,7 +1047,7 @@ function summaryData() {
 
 function openSummary() {
   const g = summaryData();
-  const dateLabel = isToday(selectedDate) ? `오늘 ${todayKey()}` : todayKey();
+  const dateLabel = (isToday(selectedDate) ? '오늘 ' : '') + shortDate(todayKey());
   document.getElementById('summaryTitle').textContent = `📋 ${cur} ${dateLabel}`;
   const groups = [['absent','결석','var(--absent-badge)'],['late','지각','var(--late-badge)'],['early','조퇴','var(--early-badge)']];
   let html = '';
@@ -907,7 +1056,7 @@ function openSummary() {
     html += g[k].length
       ? g[k].map(it=>`<div class="sum-row ${k}" onclick="closeSummary();openMemo(${it.i})">
           <span class="sum-num">${it.i+1}</span><span class="sum-name">${it.name}</span>
-          <span class="sum-memo">${it.memo||'사유 없음'}</span></div>`).join('')
+          <span class="sum-memo">${it.memo ? showMemo(it.memo) : '사유 없음'}${needsDoc(it.memo) ? ' (서류 미제출)' : ''}</span></div>`).join('')
       : `<div class="sum-none">없음</div>`;
     html += `</div>`;
   });
@@ -923,8 +1072,8 @@ function closeSummary() { document.getElementById('summaryOverlay').classList.re
 
 function copySummary() {
   const g = summaryData();
-  const fmt = arr => arr.map(it=>it.memo ? `${it.name}(${it.memo})` : it.name).join(', ');
-  const lines = [`[${cur}] ${todayKey()} 출결`];
+  const fmt = arr => arr.map(it=>it.memo ? `${it.name}(${showMemo(it.memo)})` : it.name).join(', ');
+  const lines = [`[${cur}] ${shortDate(todayKey())} 출결`];
   [['absent','결석'],['late','지각'],['early','조퇴']].forEach(([k,l])=>{
     lines.push(`${l} ${g[k].length}명${g[k].length ? ': ' + fmt(g[k]) : ''}`);
   });
@@ -973,7 +1122,7 @@ function closeTopOverlay() {
 
 function openExit() {
   const list = dirtyList();
-  const curDirty = isDirty();
+  const curDirty = hasPending();
   document.getElementById('exitMsg').textContent = list.length
     ? '시트에 저장하지 않은 변경이 있어요.'
     : '모든 출결이 시트에 저장되어 있어요.';
@@ -989,7 +1138,7 @@ function closeExit() { document.getElementById('exitOverlay').classList.remove('
 
 async function saveAndExit() {
   closeExit();
-  const ok = await saveAttendance();
+  const ok = await flush({manual:true});
   if (ok) exitApp();
 }
 
@@ -1074,6 +1223,9 @@ function delStudent(i) {
 // ── 설정 ──
 function openSettings() {
   document.getElementById('settingsUrl').value=localStorage.getItem('scriptUrl')||'';
+  document.getElementById('cfgAuto').checked = !!cfg.autoSave;
+  document.getElementById('cfgLate').value = cfg.lateWarn;
+  document.getElementById('cfgUnex').value = cfg.unexWarn;
   renderCmLists();
   document.getElementById('settingsOverlay').classList.add('show');
 }
@@ -1107,36 +1259,33 @@ function delClass(s,c) {
   renderCmLists(); save();
 }
 
-// ── 시트 저장 ──
+// ── 시트 저장 (버튼) ──
 async function saveAttendance(){
-  const url = getUrl();
-  const students=D[ses]?.[cur]||[];
-  const a=A[ses]?.[cur]||{};
-  const m=M[ses]?.[cur]||{};
-  const records=students
-    .map((name,i)=>({name, status:LABEL[a[i]]||'미입력', memo:m[i]||''}))
-    .filter(r=>r.name); // 결번 제외
-  const k = dKey();
+  queueCurrent();
   const btn=document.getElementById('saveBtn');
   btn.disabled=true; btn.innerHTML='<i class="ti ti-loader" style="font-size:15px"></i> 저장 중...';
-  try{
-    const res=await fetch(url,{method:'POST',body:JSON.stringify({
-      action:'saveAttendance',session:ses,class:cur,date:todayKey(),records
-    })});
-    const r=await res.json();
-    if (r.error) throw new Error(r.error);
-    clearDirty(k); save();
-    toast(r.message||'저장 완료 ✓','ok');
-    setSyncStatus('synced','저장됨');
-    return true;
-  }catch{
-    toast('저장 실패 — 연결 확인','err');
-    setSyncStatus('error','저장 실패');
-    return false;
-  }finally{
+  try {
+    const ok = await flush({manual:true});
+    if (ok) toast('저장 완료 ✓','ok');
+    return ok;
+  } finally {
     btn.disabled=false;
     btn.innerHTML='<i class="ti ti-device-floppy" style="font-size:15px"></i> 시트 저장';
   }
+}
+
+function applyRecords(s, c, records) {
+  const students = D[s]?.[c]||[];
+  const a = {}, m = {};
+  records.forEach(rec=>{
+    const idx = students.indexOf(rec.name);
+    if (idx === -1) return;
+    const st = STATUS_MAP[rec.status];
+    if (st) a[idx] = st;
+    if (rec.memo) m[idx] = rec.memo;
+  });
+  if (!A[s]) A[s]={}; if (!M[s]) M[s]={};
+  A[s][c] = a; M[s][c] = m;
 }
 
 // ── 시트에서 불러오기 ──
@@ -1147,9 +1296,16 @@ async function syncFromSheet(force){
   if(!url) { toast('URL이 설정되지 않았습니다','err'); return; }
 
   const mySeq = ++syncSeq;
-  // 저장 안 한 변경이 있는 반은 자동으로 덮어쓰지 않음
-  if (!force && isDirty()) { setSyncStatus('dirty','저장 안 됨'); return; }
-  const s = ses, c = cur, dKey_ = todayKey(), today = isToday(selectedDate);
+  // 저장 대기 중인 반/날짜는 시트 대신 대기열 내용을 보여줌 (덮어쓰기 방지)
+  const pk = dKey();
+  if (!force && pending[pk]) {
+    applyRecords(ses, cur, pending[pk].records);
+    save(); renderGrid(); showPendingStatus();
+    if (cfg.autoSave) scheduleFlush(500);
+    refreshWarn();
+    return;
+  }
+  const s = ses, c = cur, dKey_ = colKey(), today = isToday(selectedDate);
 
   const btn = document.getElementById('loadBtn');
   if(btn) btn.querySelector('i').style.transform='rotate(360deg)';
@@ -1163,8 +1319,7 @@ async function syncFromSheet(force){
 
     // 그 사이에 다른 반/날짜로 바뀌었거나 새로 입력을 시작했으면 이 결과는 버림
     if(mySeq !== syncSeq) return;
-    if(!force && isDirty(s,c)) { setSyncStatus('dirty','저장 안 됨'); return; }
-    delete dirty[`${s}|${c}|${dKey_}`];
+    if(!force && isDirty(s,c)) { showPendingStatus(); return; }
 
     if(!D[s]) D[s]={};
     if(!A[s]) A[s]={};
@@ -1175,6 +1330,7 @@ async function syncFromSheet(force){
       D[s][c] = r.students;
     }
 
+    refreshWarn();
     if(!r.records || !r.records.length){
       A[s][c]={}; M[s][c]={};
       save(); renderGrid();
@@ -1183,17 +1339,7 @@ async function syncFromSheet(force){
       return;
     }
 
-    const students = D[s][c]||[];
-    const newA = {}, newM = {};
-    const statusMap={'출석':'present','결석':'absent','지각':'late','조퇴':'early'};
-    r.records.forEach(rec=>{
-      const idx = students.indexOf(rec.name);
-      if(idx===-1) return;
-      if(rec.status && statusMap[rec.status]) newA[idx]=statusMap[rec.status];
-      if(rec.memo) newM[idx]=rec.memo;
-    });
-    A[s][c]=newA; M[s][c]=newM;
-
+    applyRecords(s, c, r.records);
     save(); renderGrid();
     const now = new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
     setSyncStatus('synced',`${now} 불러옴`);
@@ -1208,7 +1354,10 @@ async function syncFromSheet(force){
 }
 
 function manualSync() {
-  if (isDirty() && !confirm('저장하지 않은 변경이 있어요. 시트 내용으로 덮어쓸까요?')) return;
+  if (isDirty()) {
+    if (!confirm('이 반은 아직 시트에 저장되지 않은 입력이 있어요.\n저장하지 않고 시트 내용으로 덮어쓸까요?')) return;
+    delete pending[dKey()]; save();
+  }
   syncFromSheet(true);
 }
 
@@ -1251,96 +1400,267 @@ async function loadStudentsFromSheet(s, c) {
     toast('불러오기 실패', 'err');
   }
 }
-async function openLateStats() {
-  document.getElementById('lateStatsOverlay').classList.add('show');
-  const body = document.getElementById('lateStatsBody');
-  body.innerHTML = `<div class="ls-empty">불러오는 중...</div>`;
-
-  const url = getUrl();
-  const cls = Object.keys(D.morning)[0] || '3-1(아침자습)';
-  try {
-    const res = await fetch(`${url}?action=getAllAttendance&session=morning&class=${encodeURIComponent(cls)}`);
-    const r = await res.json();
-    renderLateStats(r.dates || {});
-  } catch {
-    body.innerHTML = `<div class="ls-empty">불러오기 실패<br>시트에 저장된 데이터가 있는지 확인하세요</div>`;
-  }
+// ── 전체 기록 캐시 (통계, 경고, 서류 체크용) ──
+let allCache = {};
+async function fetchAll(s, c, force) {
+  const k = `${s}|${c}`, hit = allCache[k];
+  if (hit && !force && Date.now() - hit.t < 5*60*1000) return hit.dates;
+  const params = new URLSearchParams({ action:'getAllAttendance', session:s, class:c });
+  const r = await (await fetch(`${getUrl()}?${params}`)).json();
+  allCache[k] = { t: Date.now(), dates: r.dates || {} };
+  return allCache[k].dates;
+}
+// 시트 기록 + 지금 화면(아직 저장 전일 수도 있는) 기록을 합침
+function mergedDates(s, c) {
+  const dates = {...(allCache[`${s}|${c}`]?.dates || {})};
+  Object.values(pending).forEach(p=>{ if (p.s===s && p.c===c) dates[p.col] = p.records.filter(r=>r.status!=='미입력'); });
+  if (s === ses && c === cur) dates[colKey()] = buildRecords(s, c).filter(r=>r.status!=='미입력');
+  return dates;
+}
+function schoolYearStart() {
+  const t = new Date();
+  return `${t.getMonth()+1 >= 3 ? t.getFullYear() : t.getFullYear()-1}-03-01`;
 }
 
+// ── 누적 경고 ──
+function warnCounts(s, c) {
+  if (!allCache[`${s}|${c}`] || (!cfg.lateWarn && !cfg.unexWarn)) return null;
+  const start = schoolYearStart(), cnt = {};
+  Object.entries(mergedDates(s, c)).forEach(([k, recs])=>{
+    if (k.slice(0,10) < start) return;
+    recs.forEach(r=>{
+      const x = cnt[r.name] || (cnt[r.name] = {late:0, unex:0});
+      if (r.status === '지각') x.late++;
+      if (r.status !== '출석' && splitMemo(r.memo).preset === '미인정') x.unex++;
+    });
+  });
+  return cnt;
+}
+function warnParts(x) {
+  if (!x) return [];
+  const parts = [];
+  if (cfg.lateWarn && x.late >= cfg.lateWarn) parts.push(`지각 ${x.late}`);
+  if (cfg.unexWarn && x.unex >= cfg.unexWarn) parts.push(`미인정 ${x.unex}`);
+  return parts;
+}
+function warnHtml(wc, name) {
+  const parts = warnParts(wc?.[name]);
+  return parts.length ? `<div class="card-warn">⚠ ${parts.join(' ')}</div>` : '';
+}
+async function refreshWarn(force) {
+  if (!cfg.lateWarn && !cfg.unexWarn) { renderGrid(); return; }
+  const s = ses, c = cur;
+  try {
+    await fetchAll(s, c, force);
+    if (s === ses && c === cur) renderGrid();
+  } catch {}
+}
+
+// ── 출결 통계 창 (월별 요약 / 서류 체크) ──
+let statsTab = 'month', statsMonth = '', showDone = false;
+async function openLateStats() {
+  document.getElementById('lateStatsOverlay').classList.add('show');
+  document.getElementById('statsTitle').textContent = `📊 ${cur} 출결 통계`;
+  if (!statsMonth) statsMonth = localToday().slice(0,7);
+  const body = document.getElementById('lateStatsBody');
+  body.innerHTML = `<div class="ls-empty">불러오는 중...</div>`;
+  try {
+    await fetchAll(ses, cur, true);
+    renderStats();
+  } catch {
+    body.innerHTML = `<div class="ls-empty">불러오기 실패<br>인터넷 연결을 확인하세요</div>`;
+  }
+}
 function closeLateStats() {
   document.getElementById('lateStatsOverlay').classList.remove('show');
 }
-
-function renderLateStats(dates) {
+function setStatsTab(t) { statsTab = t; renderStats(); }
+function moveMonth(d) {
+  let [y, m] = statsMonth.split('-').map(Number);
+  m += d; if (m < 1) { m = 12; y--; } if (m > 12) { m = 1; y++; }
+  statsMonth = `${y}-${String(m).padStart(2,'0')}`;
+  renderStats();
+}
+function renderStats() {
   const body = document.getElementById('lateStatsBody');
-  const students = D.morning?.[Object.keys(D.morning)[0]] || [];
+  let html = `<div class="st-tabs">
+    <button class="st-tab${statsTab==='month'?' on':''}" onclick="setStatsTab('month')">월별 요약</button>
+    <button class="st-tab${statsTab==='docs'?' on':''}" onclick="setStatsTab('docs')">서류 체크${docBadge()}</button>
+  </div>`;
+  html += statsTab === 'month' ? monthHtml() : docsHtml();
+  body.innerHTML = html;
+}
 
-  // 학생별 지각 횟수 집계
-  const lateCount = {};
-  students.forEach(n => lateCount[n] = 0);
-  const dateKeys = Object.keys(dates).sort((a,b) => {
-    const [am,ad] = a.split('/').map(Number);
-    const [bm,bd] = b.split('/').map(Number);
-    return am!==bm ? am-bm : ad-bd;
-  });
-
-  // 총 지각 횟수
-  let totalLate = 0;
-  dateKeys.forEach(dk => {
-    (dates[dk]||[]).forEach(r => {
-      if (r.status==='지각') { lateCount[r.name]=(lateCount[r.name]||0)+1; totalLate++; }
+const KIND = [['결석','absent'],['지각','late'],['조퇴','early']];
+function kindCount(list) {
+  // 예: "2 (질병 1, 미인정 1)"
+  if (!list.length) return '0';
+  const by = {};
+  list.forEach(r=>{ const p = splitMemo(r.memo).preset || '구분없음'; by[p] = (by[p]||0) + 1; });
+  return `${list.length} (${Object.entries(by).map(([k,v])=>`${k} ${v}`).join(', ')})`;
+}
+function monthData() {
+  const dates = mergedDates(ses, cur);
+  const students = (D[ses]?.[cur]||[]).filter(n=>n);
+  const per = {};
+  Object.keys(dates).sort().forEach(k=>{
+    if (k.slice(0,7) !== statsMonth) return;
+    dates[k].forEach(r=>{
+      if (!['결석','지각','조퇴'].includes(r.status)) return;
+      (per[r.name] || (per[r.name] = [])).push({...r, col: k});
     });
   });
+  const names = Object.keys(per).sort((a,b)=>{
+    const ia = students.indexOf(a), ib = students.indexOf(b);
+    return (ia<0?999:ia) - (ib<0?999:ib);
+  });
+  return { per, names };
+}
+function monthHtml() {
+  const [y, m] = statsMonth.split('-');
+  const { per, names } = monthData();
+  let html = `<div class="st-month">
+    <button class="date-nav-btn" onclick="moveMonth(-1)"><i class="ti ti-chevron-left"></i></button>
+    <span>${y}년 ${+m}월</span>
+    <button class="date-nav-btn" onclick="moveMonth(1)"><i class="ti ti-chevron-right"></i></button>
+  </div>`;
 
-  const lateStudents = students.filter(n => lateCount[n]>0).sort((a,b)=>lateCount[b]-lateCount[a]);
-
-  let html = `
-    <div class="ls-summary">
-      <div class="ls-sum-card"><div class="ls-sum-num">${totalLate}</div><div class="ls-sum-label">총 지각 건수</div></div>
-      <div class="ls-sum-card"><div class="ls-sum-num">${lateStudents.length}</div><div class="ls-sum-label">지각 경험 학생</div></div>
-      <div class="ls-sum-card"><div class="ls-sum-num">${dateKeys.length}</div><div class="ls-sum-label">기록된 날짜</div></div>
-    </div>`;
-
-  if (!lateStudents.length) {
-    html += `<div class="ls-empty">아직 지각 기록이 없어요 ✨</div>`;
-  } else {
-    // 학생별 지각 횟수 목록
-    html += `<div style="font-size:12px;color:var(--tx3);font-weight:700;margin-bottom:8px">학생별 지각 횟수</div>`;
-    lateStudents.forEach(name => {
-      const idx = students.indexOf(name);
-      const memos = [];
-      dateKeys.forEach(dk => {
-        const rec = (dates[dk]||[]).find(r=>r.name===name && r.status==='지각');
-        if (rec && rec.memo) memos.push(`${dk}: ${rec.memo}`);
-      });
-      html += `<div class="ls-student-row">
-        <div class="ls-student-num">${String(idx+1).padStart(2,'0')}</div>
-        <div class="ls-student-name">${name}</div>
-        ${memos.length ? `<div class="ls-student-memo" title="${memos.join('\n')}">${memos[memos.length-1]}</div>` : ''}
-        <span class="ls-count-badge">${lateCount[name]}회</span>
-      </div>`;
-    });
-
-    // 날짜별 지각자 목록
-    html += `<div style="font-size:12px;color:var(--tx3);font-weight:700;margin:14px 0 8px">날짜별 지각 현황</div>`;
-    dateKeys.forEach(dk => {
-      const lates = (dates[dk]||[]).filter(r=>r.status==='지각');
-      if (!lates.length) return;
-      html += `<div class="ls-date-section">
-        <div class="ls-date-label">${dk} <span class="ls-count-badge">${lates.length}명</span></div>`;
-      lates.forEach(r => {
-        const idx = students.indexOf(r.name);
-        html += `<div class="ls-student-row">
-          <div class="ls-student-num">${idx>=0?String(idx+1).padStart(2,'0'):'-'}</div>
-          <div class="ls-student-name">${r.name}</div>
-          <div class="ls-student-memo">${r.memo||''}</div>
-        </div>`;
-      });
-      html += `</div>`;
-    });
+  // 누적 경고 (학년도)
+  const wc = warnCounts(ses, cur) || {};
+  const warns = Object.keys(wc).map(n=>[n, warnParts(wc[n])]).filter(([,p])=>p.length);
+  if (warns.length) {
+    html += `<div class="st-sec">⚠ 누적 경고 (학년도)</div>`;
+    html += warns.map(([n,p])=>`<div class="st-warn"><b>${parseName(n).name}</b><span>${p.join(', ')}</span></div>`).join('');
   }
 
-  body.innerHTML = html;
+  const all = names.flatMap(n=>per[n]);
+  html += `<div class="ls-summary" style="margin-top:12px">${KIND.map(([k])=>
+    `<div class="ls-sum-card"><div class="ls-sum-num">${all.filter(r=>r.status===k).length}</div><div class="ls-sum-label">${k}</div></div>`).join('')}</div>`;
+
+  if (!names.length) return html + `<div class="ls-empty">이 달에는 결석/지각/조퇴 기록이 없어요</div>`;
+
+  html += `<div class="st-sec">학생별 (줄을 누르면 그 날짜로 이동)</div>`;
+  names.forEach(n=>{
+    const recs = per[n];
+    html += `<div class="st-stu"><div class="st-stu-hd"><span class="st-stu-name">${parseName(n).name}</span>
+      <span class="st-stu-cnt">${KIND.map(([k])=>`${k} ${kindCount(recs.filter(r=>r.status===k))}`).join(' / ')}</span></div>`;
+    recs.forEach(r=>{
+      const cls = STATUS_MAP[r.status];
+      html += `<div class="st-line" onclick="goToRecord('${esc(r.col)}','${esc(n)}')"><span class="st-pill ${cls}">${r.status}</span>${shortDate(r.col)} ${showMemo(r.memo)||'사유 없음'}${needsDoc(r.memo)?' <b style="color:var(--absent-badge)">(서류 미제출)</b>':''}</div>`;
+    });
+    html += `</div>`;
+  });
+  html += `<button class="sum-copy" onclick="copyMonth()"><i class="ti ti-copy"></i> 텍스트로 복사</button>`;
+  return html;
+}
+function copyMonth() {
+  const [y, m] = statsMonth.split('-');
+  const { per, names } = monthData();
+  const lines = [`[${cur}] ${y}년 ${+m}월 출결`];
+  if (!names.length) lines.push('결석/지각/조퇴 없음');
+  names.forEach(n=>{
+    const recs = per[n];
+    lines.push(`${parseName(n).name}: ${KIND.map(([k])=>`${k} ${kindCount(recs.filter(r=>r.status===k))}`).join(', ')}`);
+    recs.forEach(r=>lines.push(`  ${shortDate(r.col)} ${r.status} ${showMemo(r.memo)}`.trimEnd()));
+  });
+  copyText(lines.join('\n'));
+}
+
+// ── 서류 체크 ──
+function docItems() {
+  const start = schoolYearStart(), items = [];
+  const dates = mergedDates(ses, cur);
+  Object.keys(dates).sort().reverse().forEach(k=>{
+    if (k.slice(0,10) < start) return;
+    dates[k].forEach(r=>{
+      if (!['결석','지각','조퇴'].includes(r.status)) return;
+      const p = splitMemo(r.memo);
+      items.push({...r, col: k, preset: p.preset, doc: p.doc});
+    });
+  });
+  return items;
+}
+function docBadge() {
+  const n = docItems().filter(it=>DOC_PRESETS.includes(it.preset) && !it.doc).length;
+  return n ? ` <span class="sum-cnt" style="background:var(--absent-badge)">${n}</span>` : '';
+}
+function docRow(it, btn) {
+  const cls = STATUS_MAP[it.status];
+  return `<div class="doc-row">
+    <div class="doc-info" onclick="goToRecord('${esc(it.col)}','${esc(it.name)}')">
+      <div class="doc-top"><span class="st-pill ${cls}">${it.status}</span>${shortDate(it.col)} ${parseName(it.name).name}</div>
+      <div class="doc-memo">${showMemo(it.memo)||'사유 없음'}</div>
+    </div>${btn||''}</div>`;
+}
+function docsHtml() {
+  const items = docItems();
+  const todo = items.filter(it=>DOC_PRESETS.includes(it.preset) && !it.doc);
+  const noKind = items.filter(it=>!it.preset);
+  const done = items.filter(it=>it.doc);
+  let html = `<div class="st-sec">서류 미제출 ${todo.length}건 (질병/인정/기타, 학년도)</div>`;
+  html += todo.length
+    ? todo.map(it=>docRow(it, `<button class="doc-btn" onclick="toggleDoc('${esc(it.col)}','${esc(it.name)}',true)">제출 ✓</button>`)).join('')
+    : `<div class="sum-none">미제출 서류가 없어요 ✨</div>`;
+  if (noKind.length) {
+    html += `<div class="st-sec">사유 구분이 없는 기록 ${noKind.length}건 (눌러서 구분 입력)</div>`;
+    html += noKind.map(it=>docRow(it)).join('');
+  }
+  html += `<div class="st-sec" style="cursor:pointer" onclick="showDone=!showDone;renderStats()">${showDone?'▾':'▸'} 제출 완료 ${done.length}건</div>`;
+  if (showDone) html += done.map(it=>docRow(it, `<button class="doc-btn undo" onclick="toggleDoc('${esc(it.col)}','${esc(it.name)}',false)">취소</button>`)).join('');
+  return html;
+}
+async function toggleDoc(col, name, done) {
+  // 지금 화면의 날짜면 앱 안에서 바꾸고 일반 저장으로 처리
+  if (col === colKey()) {
+    const idx = (D[ses]?.[cur]||[]).indexOf(name);
+    if (idx < 0) return;
+    const p = splitMemo(M[ses]?.[cur]?.[idx]);
+    if (!M[ses][cur]) M[ses][cur] = {};
+    M[ses][cur][idx] = joinMemo(p.preset, p.text, done);
+    markDirty(); updateCard(idx); save(); renderStats();
+    toast(done ? '서류 제출 표시 ✓' : '서류 표시 해제', 'ok');
+    return;
+  }
+  // 지난 날짜는 시트의 그 칸만 바로 고침
+  const ck = `${ses}|${cur}`;
+  const rec = allCache[ck]?.dates?.[col]?.find(r=>r.name===name);
+  const before = rec ? rec.memo : '';
+  const p = splitMemo(before);
+  const after = joinMemo(p.preset, p.text, done);
+  if (rec) rec.memo = after;
+  Object.values(pending).forEach(pd=>{
+    if (pd.s===ses && pd.c===cur && pd.col===col) pd.records.forEach(r=>{ if (r.name===name) r.memo = after; });
+  });
+  renderStats();
+  try {
+    const r = await postJSON({ action:'setDoc', session:ses, class:cur, date:col, name, done });
+    if (r.error) throw new Error(r.error);
+    toast(r.message || '저장됨 ✓', 'ok');
+  } catch {
+    if (rec) rec.memo = before;
+    renderStats();
+    toast('저장 실패 — 연결 확인', 'err');
+  }
+}
+
+// 통계/서류 목록에서 기록을 누르면 그 날짜로 이동해서 상세 창 열기
+async function goToRecord(col, name) {
+  const m = String(col).match(/^(\d{4}-\d{2}-\d{2})(?: (\d+)교시)?$/);
+  if (!m) return;
+  closeLateStats();
+  selectedDate = new Date(m[1] + 'T00:00:00');
+  if (ses === 'class') { period = m[2] || ''; updatePeriodUI(); }
+  updateDateUI();
+  await syncFromSheet();
+  const idx = (D[ses]?.[cur]||[]).indexOf(name);
+  if (idx >= 0) openMemo(idx);
+}
+
+function copyText(text) {
+  const done = () => toast('복사됨 ✓','ok');
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(text).then(done).catch(()=>fallbackCopy(text, done));
+  } else fallbackCopy(text, done);
 }
 
 function toast(msg,type=''){
