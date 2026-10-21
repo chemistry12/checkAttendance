@@ -508,6 +508,14 @@ html,body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-se
       <div class="sp-hint" id="appVersion"></div>
     </div>
     <div class="sp-sec">
+      <div class="sp-label">뒤로가기 진단</div>
+      <pre id="backLogBox" style="font-size:11px;line-height:1.5;white-space:pre-wrap;background:var(--surf2);border-radius:8px;padding:8px;max-height:180px;overflow:auto;color:var(--tx2)"></pre>
+      <div style="display:flex;gap:6px;margin-top:6px">
+        <button class="btn-confirm" style="flex:1" onclick="copyBackLog()">기록 복사</button>
+        <button class="btn-cancel" onclick="clearBackLog()">지우기</button>
+      </div>
+    </div>
+    <div class="sp-sec">
       <div class="sp-label">Google Apps Script URL</div>
       <input class="sp-url" id="settingsUrl" type="url" placeholder="배포된 웹앱 URL" />
       <button class="btn-confirm" style="width:100%;padding:10px;border-radius:8px" onclick="saveUrl()">저장</button>
@@ -1090,55 +1098,78 @@ function fallbackCopy(text, done) {
 }
 
 // ── 뒤로가기 막기 + 나가기 ──
-// 1순위: CloseWatcher (안드로이드 크롬의 뒤로가기 전용 기능, 설치형 앱에서도 동작)
-// 2순위: 방문 기록 장치 (CloseWatcher가 없는 브라우저용)
-const APP_VERSION = '2026-10-21 v9';
+// CloseWatcher(크롬 뒤로가기 전용 기능)와 방문 기록 장치를 함께 걸어 둠.
+// 어느 쪽으로 신호가 와도 한 번만 처리(backOnce).
+const APP_VERSION = '2026-10-21 v10';
 let exiting = false;
+
+// 진단 기록: 앱이 꺼져도 남도록 저장 (설정 → 뒤로가기 진단에서 확인)
+function blog(msg) {
+  try {
+    const arr = JSON.parse(localStorage.getItem('backLog') || '[]');
+    const t = new Date().toLocaleTimeString('ko-KR', {hour12:false});
+    arr.push(`${t} ${msg}`);
+    localStorage.setItem('backLog', JSON.stringify(arr.slice(-25)));
+  } catch {}
+}
+function showBackLog() {
+  let arr = [];
+  try { arr = JSON.parse(localStorage.getItem('backLog') || '[]'); } catch {}
+  return arr.join('\n') || '(기록 없음)';
+}
+function copyBackLog() {
+  const ua = navigator.userAgent;
+  copyText(`버전 ${APP_VERSION}\n${ua}\n앱모드 ${matchMedia('(display-mode: standalone)').matches}\n---\n${showBackLog()}`);
+}
+function clearBackLog() { try { localStorage.removeItem('backLog'); } catch {} document.getElementById('backLogBox').textContent = '(기록 없음)'; }
+
+let lastBack = 0;
+function backOnce(src) {
+  const now = Date.now();
+  blog(`뒤로가기 신호: ${src}`);
+  if (now - lastBack < 400) return;
+  lastBack = now;
+  handleBack();
+}
 function handleBack() {
   if (!closeTopOverlay()) openExit();
 }
 
-let cw = null, lastBack = 0;
-function backOnce() {
-  const now = Date.now();
-  if (now - lastBack < 300) return;
-  lastBack = now;
-  handleBack();
-}
+// 1) CloseWatcher
+let cw = null;
 const HAS_CW = 'CloseWatcher' in window;
 function armCloseWatcher() {
   if (!HAS_CW || cw || exiting) return;
   try {
     cw = new CloseWatcher();
-    // 뒤로가기 한 번에 cancel과 close가 연달아 올 수 있어서 한 번만 처리
-    cw.oncancel = e => { e.preventDefault(); backOnce(); };
-    // 취소할 수 없는 경우: 이번 감시는 끝나지만 앱은 안 꺼짐 → 바로 새로 걸기
-    cw.onclose = () => { cw = null; if (!exiting) { backOnce(); setTimeout(armCloseWatcher, 0); } };
-  } catch { cw = null; }
+    cw.oncancel = e => { e.preventDefault(); backOnce('cancel'); };
+    cw.onclose = () => { cw = null; if (!exiting) { backOnce('close'); setTimeout(armCloseWatcher, 0); } };
+  } catch (e) { cw = null; blog('CloseWatcher 실패 ' + e.message); }
 }
 
+// 2) 방문 기록 장치
 let trapDepth = 0, needFresh = true;
-function armBackTrap() {
+function armHistoryTrap() {
   if (exiting) return;
-  if (HAS_CW) { armCloseWatcher(); return; }
   if (trapDepth === 0 || (needFresh && trapDepth < 3)) {
     history.pushState({attTrap: Date.now()}, '');
     trapDepth++;
     needFresh = false;
   }
 }
+function armBackTrap() { armCloseWatcher(); armHistoryTrap(); }
 document.addEventListener('click', armBackTrap, true);
 document.addEventListener('touchend', armBackTrap, true);
 document.addEventListener('keydown', armBackTrap, true);
 window.addEventListener('popstate', ()=>{
-  if (HAS_CW) return;
   trapDepth = Math.max(0, trapDepth - 1);
   if (exiting) return;
-  handleBack();
+  backOnce('popstate');
   if (trapDepth === 0) { history.pushState({attTrap: Date.now()}, ''); trapDepth = 1; }
   needFresh = true;
 });
-// 앱을 켜자마자(아무것도 누르기 전)도 뒤로가기를 한 번은 막아 줌
+window.addEventListener('pagehide', ()=>blog(`앱 숨김/종료 (기록 ${trapDepth}개, 감시 ${cw ? '있음' : '없음'})`));
+blog(`앱 시작 (앱모드 ${matchMedia('(display-mode: standalone)').matches}, CloseWatcher ${HAS_CW})`);
 armCloseWatcher();
 
 function closeTopOverlay() {
@@ -1258,7 +1289,8 @@ function delStudent(i) {
 function openSettings() {
   document.getElementById('settingsUrl').value=localStorage.getItem('scriptUrl')||'';
   document.getElementById('cfgAuto').checked = !!cfg.autoSave;
-  document.getElementById('appVersion').textContent = `${APP_VERSION} (뒤로가기: ${HAS_CW ? 'CloseWatcher' : '방문 기록'})`;
+  document.getElementById('appVersion').textContent = `${APP_VERSION} (CloseWatcher ${HAS_CW ? '있음' : '없음'})`;
+  document.getElementById('backLogBox').textContent = showBackLog();
   renderCmLists();
   document.getElementById('settingsOverlay').classList.add('show');
 }
