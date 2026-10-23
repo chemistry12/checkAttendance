@@ -241,6 +241,24 @@ html,body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-se
 .sp-num{width:64px;padding:6px 8px;border-radius:8px;border:.5px solid var(--bd2);background:var(--surf2);color:var(--tx);font-size:14px;font-family:inherit;text-align:center}
 .sp-hint{font-size:11px;color:var(--tx3);line-height:1.5}
 
+/* 달력 */
+.cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.cal-title{font-size:16px;font-weight:700}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal-dow{text-align:center;font-size:12px;font-weight:700;color:var(--tx3);padding:4px 0}
+.cal-dow.sun,.cal-day.sun{color:var(--absent-badge)}
+.cal-dow.sat,.cal-day.sat{color:var(--blue)}
+.cal-day{position:relative;height:44px;border-radius:10px;border:none;background:var(--surf2);color:var(--tx);font-size:15px;font-weight:600;cursor:pointer;font-family:inherit}
+.cal-day.blank{background:transparent;cursor:default}
+.cal-day.today{outline:2px solid var(--blue);outline-offset:-2px}
+.cal-day.sel{background:var(--blue);color:#fff}
+.cal-day:disabled{opacity:.3;cursor:default}
+.cal-dots{position:absolute;left:0;right:0;bottom:4px;display:flex;justify-content:center;gap:2px}
+.cal-dot{width:5px;height:5px;border-radius:50%}
+.cal-legend{display:flex;gap:12px;justify-content:center;font-size:11px;color:var(--tx3);margin-top:10px}
+.cal-legend span{display:flex;align-items:center;gap:4px}
+.cal-today-btn{width:100%;margin-top:12px;padding:11px;border-radius:10px;border:none;background:var(--blue);color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}
+
 /* 나가기 확인 */
 .exit-warn{font-size:13px;color:var(--absent-badge);background:var(--absent-bg);border-radius:8px;padding:10px 12px;margin:0 16px;line-height:1.5}
 .exit-msg{font-size:14px;color:var(--tx2);text-align:center;padding:4px 16px 12px}
@@ -327,7 +345,6 @@ html,body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-se
       <option value="1">1교시</option><option value="2">2교시</option><option value="3">3교시</option><option value="4">4교시</option>
       <option value="5">5교시</option><option value="6">6교시</option><option value="7">7교시</option><option value="8">8교시</option>
     </select>
-    <input type="date" id="datePicker" style="display:none" onchange="onDatePick(this.value)">
   </div>
   <div class="session-tabs">
     <button class="session-tab active" id="tab-morning" onclick="switchSession('morning')">🏠 담임</button>
@@ -447,6 +464,17 @@ html,body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-se
       <button class="icon-btn" onclick="closeSummary()"><i class="ti ti-x"></i></button>
     </div>
     <div class="ls-body" id="summaryBody"></div>
+  </div>
+</div>
+
+<!-- 달력 -->
+<div class="late-stats-overlay" id="calOverlay" onclick="if(event.target===this)closeCal()">
+  <div class="late-stats-sheet">
+    <div class="ls-header">
+      <div class="ls-title">📅 날짜 선택</div>
+      <button class="icon-btn" onclick="closeCal()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="ls-body" id="calBody"></div>
   </div>
 </div>
 
@@ -699,14 +727,66 @@ function moveDate(delta) {
   syncFromSheet();
 }
 
+// ── 달력 ──
+let calMonth = '';   // "YYYY-MM"
 function openDatePicker() {
-  const picker = document.getElementById('datePicker');
-  const y = selectedDate.getFullYear();
-  const m = String(selectedDate.getMonth()+1).padStart(2,'0');
-  const day = String(selectedDate.getDate()).padStart(2,'0');
-  picker.value = `${y}-${m}-${day}`;
-  picker.max = localToday();
-  picker.click();
+  calMonth = ymd(selectedDate).slice(0,7);
+  renderCal();
+  document.getElementById('calOverlay').classList.add('show');
+  // 결석/지각/조퇴 표시용 기록을 뒤에서 불러와서 다시 그림
+  fetchAll(ses, cur).then(()=>{ if (document.getElementById('calOverlay').classList.contains('show')) renderCal(); }).catch(()=>{});
+}
+function closeCal() { document.getElementById('calOverlay').classList.remove('show'); }
+function moveCal(d) {
+  let [y, m] = calMonth.split('-').map(Number);
+  m += d; if (m < 1) { m = 12; y--; } if (m > 12) { m = 1; y++; }
+  calMonth = `${y}-${String(m).padStart(2,'0')}`;
+  renderCal();
+}
+function renderCal() {
+  const [y, m] = calMonth.split('-').map(Number);
+  const first = new Date(y, m-1, 1).getDay();
+  const days = new Date(y, m, 0).getDate();
+  const today = localToday(), sel = ymd(selectedDate);
+  const thisMonth = today.slice(0,7);
+
+  // 날짜별 결석/지각/조퇴 여부 (교시 기록도 날짜로 합침)
+  const marks = {};
+  if (allCache[`${ses}|${cur}`]) {
+    Object.entries(mergedDates(ses, cur)).forEach(([k, recs])=>{
+      const d = k.slice(0,10);
+      recs.forEach(r=>{
+        const st = STATUS_MAP[r.status];
+        if (st && st !== 'present') (marks[d] || (marks[d] = new Set())).add(st);
+      });
+    });
+  }
+  const color = {absent:'var(--absent-badge)', late:'var(--late-badge)', early:'var(--early-badge)'};
+
+  let html = `<div class="cal-head">
+    <button class="date-nav-btn" onclick="moveCal(-1)"><i class="ti ti-chevron-left"></i></button>
+    <span class="cal-title">${y}년 ${m}월</span>
+    <button class="date-nav-btn" onclick="moveCal(1)" ${calMonth >= thisMonth ? 'disabled' : ''}><i class="ti ti-chevron-right"></i></button>
+  </div><div class="cal-grid">`;
+  ['일','월','화','수','목','금','토'].forEach((d,i)=>{
+    html += `<div class="cal-dow${i===0?' sun':i===6?' sat':''}">${d}</div>`;
+  });
+  for (let i = 0; i < first; i++) html += `<div class="cal-day blank"></div>`;
+  for (let d = 1; d <= days; d++) {
+    const key = `${calMonth}-${String(d).padStart(2,'0')}`;
+    const dow = (first + d - 1) % 7;
+    const cls = ['cal-day', dow===0?'sun':dow===6?'sat':'', key===today?'today':'', key===sel?'sel':''].join(' ');
+    const dots = marks[key] ? `<span class="cal-dots">${['absent','late','early'].filter(t=>marks[key].has(t)).map(t=>`<i class="cal-dot" style="background:${color[t]}"></i>`).join('')}</span>` : '';
+    html += `<button class="${cls}" onclick="pickCalDay('${key}')" ${key > today ? 'disabled' : ''}>${d}${dots}</button>`;
+  }
+  html += `</div>
+    <div class="cal-legend"><span><i class="cal-dot" style="background:${color.absent}"></i>결석</span><span><i class="cal-dot" style="background:${color.late}"></i>지각</span><span><i class="cal-dot" style="background:${color.early}"></i>조퇴</span></div>
+    <button class="cal-today-btn" onclick="pickCalDay('${today}')">오늘로 가기</button>`;
+  document.getElementById('calBody').innerHTML = html;
+}
+function pickCalDay(key) {
+  closeCal();
+  onDatePick(key);
 }
 
 function onPeriodChange(v) {
@@ -1100,7 +1180,7 @@ function fallbackCopy(text, done) {
 // ── 뒤로가기 막기 + 나가기 ──
 // CloseWatcher(크롬 뒤로가기 전용 기능)와 방문 기록 장치를 함께 걸어 둠.
 // 어느 쪽으로 신호가 와도 한 번만 처리(backOnce).
-const APP_VERSION = '2026-10-23 v11';
+const APP_VERSION = '2026-10-23 v12';
 let exiting = false;
 
 // 진단 기록: 앱이 꺼져도 남도록 저장 (설정 → 뒤로가기 진단에서 확인)
@@ -1178,6 +1258,7 @@ function closeTopOverlay() {
   if (isOpen('memoOverlay'))     { closeMemo(); return true; }
   if (isOpen('editModal'))       { closeEditModal(); return true; }
   if (isOpen('addClassModal'))   { closeAddModal(); return true; }
+  if (isOpen('calOverlay'))      { closeCal(); return true; }
   if (isOpen('summaryOverlay'))  { closeSummary(); return true; }
   if (isOpen('lateStatsOverlay')){ closeLateStats(); return true; }
   if (isOpen('settingsOverlay')) { closeSettings(); return true; }
