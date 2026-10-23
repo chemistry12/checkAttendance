@@ -1100,7 +1100,7 @@ function fallbackCopy(text, done) {
 // ── 뒤로가기 막기 + 나가기 ──
 // CloseWatcher(크롬 뒤로가기 전용 기능)와 방문 기록 장치를 함께 걸어 둠.
 // 어느 쪽으로 신호가 와도 한 번만 처리(backOnce).
-const APP_VERSION = '2026-10-21 v10';
+const APP_VERSION = '2026-10-23 v11';
 let exiting = false;
 
 // 진단 기록: 앱이 꺼져도 남도록 저장 (설정 → 뒤로가기 진단에서 확인)
@@ -1614,22 +1614,56 @@ function docRow(it, btn) {
       <div class="doc-memo">${showMemo(it.memo)||'사유 없음'}</div>
     </div>${btn||''}</div>`;
 }
+// 서류 체크: 달별로 필요/제출/미제출 확인 (월말 출결 마감용)
+let docsAll = false;
 function docsHtml() {
+  const [y, m] = statsMonth.split('-');
   const items = docItems();
-  const todo = items.filter(it=>DOC_PRESETS.includes(it.preset) && !it.doc);
-  const noKind = items.filter(it=>!it.preset);
-  const done = items.filter(it=>it.doc);
-  let html = `<div class="st-sec">서류 미제출 ${todo.length}건 (질병/인정, 학년도)</div>`;
+  const need = it => DOC_PRESETS.includes(it.preset);
+  const inMonth = it => it.col.slice(0,7) === statsMonth;
+  const before = items.filter(it => need(it) && !it.doc && it.col.slice(0,7) < statsMonth);
+
+  const scope = docsAll ? items : items.filter(inMonth);
+  const needList = scope.filter(need);
+  const todo = needList.filter(it=>!it.doc).sort((a,b)=>a.col<b.col?-1:1);
+  const done = needList.filter(it=>it.doc).sort((a,b)=>a.col<b.col?-1:1);
+  const noKind = scope.filter(it=>!it.preset);
+
+  let html = `<div class="st-month">
+    <button class="date-nav-btn" onclick="moveMonth(-1)"${docsAll?' disabled':''}><i class="ti ti-chevron-left"></i></button>
+    <span>${docsAll ? '학년도 전체' : `${y}년 ${+m}월`}</span>
+    <button class="date-nav-btn" onclick="moveMonth(1)"${docsAll?' disabled':''}><i class="ti ti-chevron-right"></i></button>
+  </div>`;
+  html += `<div class="ls-summary">
+    <div class="ls-sum-card"><div class="ls-sum-num" style="color:var(--tx)">${needList.length}</div><div class="ls-sum-label">필요</div></div>
+    <div class="ls-sum-card"><div class="ls-sum-num" style="color:var(--present-badge)">${done.length}</div><div class="ls-sum-label">제출</div></div>
+    <div class="ls-sum-card"><div class="ls-sum-num" style="color:var(--absent-badge)">${todo.length}</div><div class="ls-sum-label">미제출</div></div>
+  </div>`;
+  if (!docsAll && before.length) {
+    html += `<div class="exit-warn" style="margin:0 0 10px;cursor:pointer" onclick="docsAll=true;renderStats()">⚠ 지난달까지 미제출 ${before.length}건이 남아 있어요 (눌러서 전체 보기)</div>`;
+  }
+  html += `<div class="sum-copy" style="background:var(--surf2);color:var(--tx2);border:.5px solid var(--bd2);margin:0 0 10px" onclick="docsAll=!docsAll;renderStats()">${docsAll ? '달별로 보기' : '학년도 전체 미제출 보기'}</div>`;
+
+  html += `<div class="st-sec">미제출 ${todo.length}건 (질병/인정)</div>`;
   html += todo.length
     ? todo.map(it=>docRow(it, `<button class="doc-btn" onclick="toggleDoc('${esc(it.col)}','${esc(it.name)}',true)">제출 ✓</button>`)).join('')
-    : `<div class="sum-none">미제출 서류가 없어요 ✨</div>`;
+    : `<div class="sum-none">${needList.length ? '모두 제출했어요 ✨' : '이 기간에는 서류가 필요한 기록이 없어요'}</div>`;
   if (noKind.length) {
     html += `<div class="st-sec">사유 구분이 없는 기록 ${noKind.length}건 (눌러서 구분 입력)</div>`;
     html += noKind.map(it=>docRow(it)).join('');
   }
   html += `<div class="st-sec" style="cursor:pointer" onclick="showDone=!showDone;renderStats()">${showDone?'▾':'▸'} 제출 완료 ${done.length}건</div>`;
   if (showDone) html += done.map(it=>docRow(it, `<button class="doc-btn undo" onclick="toggleDoc('${esc(it.col)}','${esc(it.name)}',false)">취소</button>`)).join('');
+  if (needList.length) html += `<button class="sum-copy" onclick="copyDocs()"><i class="ti ti-copy"></i> 미제출 목록 복사</button>`;
   return html;
+}
+function copyDocs() {
+  const [y, m] = statsMonth.split('-');
+  const items = docItems().filter(it => DOC_PRESETS.includes(it.preset) && (docsAll || it.col.slice(0,7) === statsMonth));
+  const todo = items.filter(it=>!it.doc).sort((a,b)=>a.col<b.col?-1:1);
+  const lines = [`[${cur}] ${docsAll ? '학년도 전체' : `${y}년 ${+m}월`} 증빙서류: 필요 ${items.length}건, 제출 ${items.length-todo.length}건, 미제출 ${todo.length}건`];
+  todo.forEach(it=>lines.push(`  ${shortDate(it.col)} ${parseName(it.name).name} ${it.status} ${showMemo(it.memo)}`.trimEnd()));
+  copyText(lines.join('\n'));
 }
 async function toggleDoc(col, name, done) {
   // 지금 화면의 날짜면 앱 안에서 바꾸고 일반 저장으로 처리
